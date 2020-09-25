@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+########################################################################
+# FILE: path
+#
+# PURPOSE: List directories in PATH, one on each line
+#
+# USAGE: path
+#
+# MODIFICATION HISTORY:
+#   2020/09/16, SK Hushing III. Original issue for Fedora.
+########################################################################
+my @dirs = split(/:/,$ENV{PATH});
+foreach my $dir (@dirs) {
+    print "$dir\n";
+}

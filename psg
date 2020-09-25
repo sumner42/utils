@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+'########################################################################
+# FILE: psg
+#
+# PURPOSE: Print running processes that match a string
+#
+# USAGE: psg [-h][-s] [string]
+#
+# ARGUMENTS:
+#   string  String to match
+#
+# OPTIONS:
+#   -h      Filter out header line
+#   -s      Suppress system processes
+#
+# MODIFICATION HISTORY:
+#   2020/09/16, SK Hushing III. Original issue for Fedora.
+########################################################################
+'; exit }
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = `basename $0`; chomp($script);
+my $myPid = $$;
+
+#----[ Handle command line arguments ]----#
+my $nohdr = 0;
+my $nosys = 0;
+my $string = "";
+my $v = 0;
+GetOptions (
+    "h" => \$nohdr,
+    "s" => \$nosys,
+    "v+" => \$v,
+) or die ("Command line error\n");
+usage() if scalar(@ARGV) && $ARGV[0] eq "help";
+$string = $ARGV[0] if scalar(@ARGV) > 0;
+
+#----[ Sample output lines from ps -ef ]----#
+# UID          PID    PPID  C STIME TTY          TIME CMD
+# root           1       0  0 13:42 ?        00:00:08 /usr/lib/systemd/systemd --switched-root --system --deserialize 17
+
+#----[ Parse output from ps command ]----#
+print "My PID = $myPid\n" if $v;
+open(PS, "-|", "ps -ef 2>/dev/null");
+while (my $line = <PS>) {
+    chomp($line);
+    my ($uid,$pid,$ppid,$c,$stime,$tty,$time,$cmd) = split(/ +/, $line);
+    print "$line\n" if !$nohdr && $uid eq "UID";
+    next if $string ne "" && $line !~ m/$string/i;
+    next if $pid eq $myPid;
+    print "$line\n";
+}
+close(PS);

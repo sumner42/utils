@@ -1,0 +1,33 @@
+#!/usr/bin/perl
+########################################################################
+# FILE: add_aliases
+#
+# PURPOSE: Add my favorite aliases to .bashrc
+#
+# USAGE: add_aliases
+#
+# MODIFICATION HISTORY:
+#   2020/09/18 SK Hushing III. Original issue for Fedora.
+########################################################################
+
+#----[ Misc initializations ]----#
+my $script = `basename $0`; chomp($script);
+
+#----[ Start in home directory ]----#
+my $HOME = $ENV{HOME};
+print "$script: starting in $HOME\n";
+chdir "$HOME";
+
+#----[ Create aliases ]----#
+my $rc = ".bashrc";
+my $rco = "$rc.orig";
+if (! -e $rco) {
+    print "$script: backing up $rc to $rco\n";
+    system("cp -p $rc $rco");
+    print "$script: adding aliases to $rc\n";
+    open(RC, ">>", "$rc") or die "Can't open $rc";
+    print RC qq(alias la='ls -lFa --color=auto'\n);
+    print RC qq(alias lx='ls -CF --color=auto'\n);
+    print RC qq(alias lt='ls -lFtr --color=auto'\n);
+    close(RC);
+}

@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+'########################################################################
+# FILE: pingnet
+#
+# PURPOSE: Ping all addresses on the subnet
+#
+# USAGE: pingnet 
+#
+# PARAMETERS:
+#   -v           Verbose mode
+#
+# EXAMPLE: pingnet -v
+#
+# MODIFICATION HISTORY:
+#   2020/09/20, SK Hushing III. Original issue for Fedora.
+########################################################################
+'; exit }
+
+use strict;
+use warnings;
+# use Net::IP;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = `basename $0`; chomp($script);
+
+#----[ Handle command line options ]----#
+my $string_option_a = "";
+my $integer_option_b = 0;
+my $switch_option_c = 0;
+my $v = 0;
+GetOptions (
+    "a=s" => \$string_option_a,
+    "b=i" => \$integer_option_b,
+    "c" => \$switch_option_c,
+    "v+"  => \$v,
+) or die ("newscript: * Unsupported option\n");
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
+#----[ Body of script ]----#
+my $myIP = `hostname -I | cut -f1 -d' '`; chomp($myIP);
+print "my IP: $myIP\n" if $v;
+my $subnet = $1 if $myIP =~ m/(\d+\.\d+\.\d+)\.\d+/;
+print "my subnet: $subnet\n" if $v;
+for (my $i=0; $i<=254; $i++) {
+    my $testIP = $subnet . "." . $i;
+    system("myping $testIP");
+}

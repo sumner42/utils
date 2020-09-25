@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+'########################################################################
+# FILE: mnt
+#
+# PURPOSE: More readable list of mounted filesystems
+#
+# USAGE: mnt 
+#
+# PARAMETERS: 
+#   -v           Verbose mode
+#
+# EXAMPLE: mnt -v 
+#
+# MODIFICATION HISTORY:
+#   2020/09/21, SK Hushing III. Original issue for Fedora.
+########################################################################
+'; exit }
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = `basename $0`; chomp($script);
+
+#----[ Handle command line options ]----#
+my $v = 0;
+GetOptions (
+    "v+"  => \$v,
+) or die ("newscript: * Unsupported option\n");
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
+#----[ Handle command line arguments ]----#
+my $narg = @ARGV;
+if (scalar(@ARGV) >= 1) {
+    print STDERR "$script: * Unexpected argument(s) found\n" if $v;
+    usage();
+}
+# $arg1 = $ARGV[0];
+
+# print "$script: See findmnt\n";
+
+#----[ Body of script ]----#
+print "#----- Beginning $script\n" if $v;
+open(MNT, "-|", "findmnt -A -D 2>/dev/null") or die "error opening mount pipe\n";
+while (my $line = <MNT>) {
+    chomp($line);
+    # print "$line\n" if $v;
+    next if $line =~ "boot";
+    next if $line =~ "tmpfs";
+    next if $line =~ "portal";
+    next if $line =~ " 0 ";
+    print "$line\n";
+    # my ($dev,$on,$mnt,$typ,$type,$perms) = split(/  */, $line);
+    # print "$dev $mnt $type $perms\n";
+}
+close(MNT);
+print "#----- Finished $script\n" if $v;
+

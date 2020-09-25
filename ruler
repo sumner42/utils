@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+'########################################################################
+# FILE: ruler
+#
+# PURPOSE: Print a horizontal character ruler
+#
+# USAGE: ruler [-w [width]]
+#
+# ARGUMENTS:
+#   width        Width of ruler in characters. Default is 80.
+#
+# MODIFICATION HISTORY:
+#   2020/09/19, SK Hushing III. Original issue for Fedora.
+########################################################################
+'; exit }
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = `basename $0`; chomp($script);
+
+#----[ Handle command line options ]----#
+my $width = 80;
+my $v = 0;
+GetOptions (
+    "w=i" => \$width,
+    "v+"  => \$v,
+) or die ("newscript: * Unsupported option\n");
+
+#----[ Handle command line arguments ]----#
+if (scalar(@ARGV) > 0) {
+    usage() if $ARGV[0] eq "help";
+    $width = $ARGV[0];
+}
+
+#----[ Body of script ]----#
+for (my $i=1; $i<=$width/10; $i++) { printf "%10i", $i }; print "\n";
+for (my $i=1; $i<=$width; $i++) { print $i % 10 }; print "\n";

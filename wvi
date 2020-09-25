@@ -1,0 +1,54 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+'########################################################################
+# FILE: wvi
+#
+# PURPOSE: Find and edit an executable script in the current PATH
+#
+# USAGE: wvi [script]
+#
+# PARAMETERS:
+#   script  Script to edit
+#
+# TODO: 
+#   Handle multiple arguments?
+#
+# MODIFICATION HISTORY:
+#   2020/09/25, SK Hushing III. Original issue for Fedora.
+########################################################################
+'; exit }
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = `basename $0`; chomp($script);
+my $myPid = $$;
+
+#----[ Handle command line arguments ]----#
+my $file = "";
+my $gFlag = 0;
+my $VFlag = 0;
+my $v = 0;
+GetOptions (
+    "V" => \$VFlag,
+    "g" => \$gFlag,
+    "v+" => \$v,
+) or die ("Command line error\n");
+usage() if scalar(@ARGV) && $ARGV[0] eq "help";
+$file = $ARGV[0] if scalar(@ARGV) > 0;
+my $ed = "vi";
+if ($gFlag) {
+    $ed = "gvim";
+} elsif ($VFlag) {
+    $ed = "vim";
+}
+print "Selected editor is $ed\n" if $v;
+
+#----[ Find the Path To the Script using which ]----#
+my $pts = `which $file` or die "$script: Error finding $file. Aborted.\n"; chomp($pts);
+my $cmd = "$ed $pts";
+print "system($cmd)\n" if $v;
+# system("$cmd");

@@ -1,0 +1,22 @@
+#!/usr/bin/perl
+########################################################################
+# FILE: psg
+#
+# PURPOSE: filter running processes from ps command
+#
+# USAGE: psg
+#
+# MODIFICATION HISTORY:
+#   2020/09/16 SK Hushing III. Original issue for Fedora.
+########################################################################
+
+#----[ Parse output from PS command ]----#
+# UID          PID    PPID  C STIME TTY          TIME CMD
+# root           1       0  0 13:42 ?        00:00:08 /usr/lib/systemd/systemd --switched-root --system --deserialize 17
+
+    open(PS, "ps -ef|");
+    while (<PS>) {
+	($uid,$pid,$ppid,$c,$stime,$tty,$time,$cmd) = split;
+	print "$pid $cmd\n";
+    }
+    close(PS);

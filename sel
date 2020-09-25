@@ -1,0 +1,3 @@
+# FILE: sel
+# PURPOSE: print a list of files that contain a string
+# USAGE: sel [-r] 'string' files

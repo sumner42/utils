@@ -1,15 +1,43 @@
 #!/usr/bin/perl
-########################################################################
+sub usage() { print STDERR
+'########################################################################
 # FILE: path
 #
 # PURPOSE: List directories in PATH, one on each line
 #
-# USAGE: path
+# USAGE: path [c]
+# 
+# PARAMETERS:
+#   c     - List directories in CDPATH. Default is to list PATH.
 #
 # MODIFICATION HISTORY:
 #   2020/09/16, SK Hushing III. Original issue for Fedora.
 ########################################################################
-my @dirs = split(/:/,$ENV{PATH});
+'; exit }
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Misc initializations ]----#
+my $script = `basename $0`; chomp($script);
+my $var = "PATH";
+
+#----[ Handle c or p command line argument ]----#
+usage() if scalar(@ARGV) && $ARGV[0] eq "help";
+if (scalar(@ARGV)) {
+    if ($ARGV[0] =~ "^[Cc]") {
+	$var = "CDPATH";
+    } elsif ($ARGV[0] =~ "^[Pp]") {
+	$var = "PATH";
+    } else {
+	die ("* $script - unrecognized argument $ARGV[0]\n");
+    }
+}
+
+#----[ Print components of specified path variable ]----#
+my @dirs = split(/:/,$ENV{$var});
 foreach my $dir (@dirs) {
     print "$dir\n";
 }

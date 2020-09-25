@@ -1,0 +1,3 @@
+# FILE: sudolog
+# PURPOSE: print the sudolog, optionally filtering for a string
+# USAGE: sudolog [string]

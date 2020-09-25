@@ -1,0 +1,3 @@
+# FILE: rn
+# PURPOSE: rename files using wildcards
+# EXAMPLE: rn "abc" "def" *.txt

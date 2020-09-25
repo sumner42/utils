@@ -8,10 +8,10 @@ sub usage() { print STDERR
 # USAGE: newscript [-l lang][-p purpose][-u parms] name
 #
 # PARAMETERS:
-#   -f          Force writing if file exists. Default is to quit.
+#   -f          Force writing over existing file. Default is to quit.
 #   -l lang     Script language (perl or bash). Default is perl.
-#   -p purpose  Purpose text describing why the script exists.
-#   -u parms    Usage text describing parameters.
+#   -p purpose  Text for Purpose line describing why the script exists.
+#   -u parms    Text for Usage line describing how to run the script.
 #   -v          Verbose mode.
 #   name        Name of script to create. 
 #

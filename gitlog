@@ -1,0 +1,62 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+"########################################################################
+# FILE: gitlog
+#
+# PURPOSE: Reformat the git log into a single line per event
+#
+# USAGE: gitlog [string]
+#
+# PARAMETERS:
+#   -v           Verbose mode
+#   string       Only print lines containing string.
+#
+# EXAMPLES:
+#   gitlog 
+#   gitlog initial
+#
+# MODIFICATION HISTORY:
+#   2020/09/26, SK Hushing III. Original issue for Fedora.
+########################################################################
+"; exit }
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = `basename $0`; chomp($script);
+
+#----[ Handle command line options ]----#
+my $v = 0;
+GetOptions (
+    "v+"  => \$v,
+) or die ("newscript: * Unsupported option\n");
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
+#----[ Handle command line argument ]----#
+my $string = scalar(@ARGV) > 0 ? $ARGV[0] : "";
+print "$script: searching gitlog for ($string)\n" if $string ne "" && $v;
+
+#----[ Body of script ]----#
+my $out = "";
+open(LOG, "-|", "git log 2>/dev/null");
+while (my $line = <LOG>) {
+    chomp($line);
+    next if $line =~ "^commit";
+    next if $line =~ "^Author:";
+    next if $line eq "";
+    if ($line =~ /-0600$/) {
+	$line =~ s/Date: +//;
+	$line =~ s/ -0600//;
+	# print "$line";
+	$out = $line;
+    } else {
+	$line =~ s/^   //;
+	# print "$line\n";
+	$out .= $line;
+	print "$out\n" if $string eq "" || $string ne "" && $line =~ /$string/;
+    }
+}
+close(LOG);

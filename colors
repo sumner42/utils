@@ -1,0 +1,43 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+"########################################################################
+# FILE: colors
+#
+# PURPOSE: Print color definitions
+#
+# USAGE: colors 
+#
+# PARAMETERS: None.
+#
+# EXAMPLE: colors
+#
+# MODIFICATION HISTORY:
+#   2020/09/27, SK Hushing III. Original issue for Fedora.
+########################################################################
+"; exit }
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = `basename $0`; chomp($script);
+
+#----[ Handle command line options ]----#
+my $v = 0;
+GetOptions (
+    "v+"  => \$v,
+) or die ("newscript: * Unsupported option\n");
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
+#----[ Body of script ]----#
+for (my $wt=0; $wt<=1; $wt++) {
+    for (my $bg=40; $bg<=47; $bg++) {
+	for (my $fg=30; $fg<=37; $fg++) {
+	    print "[${wt};${fg};${bg}m${wt};${fg};${bg}[0m ";
+	}
+	print "\n";
+    }
+}
+

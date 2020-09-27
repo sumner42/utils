@@ -58,31 +58,39 @@ usage() if scalar(@ARGV) && $ARGV[0] eq "help";
 my $narg = @ARGV;
 die "$script: * No script name provided\n" if scalar(@ARGV) < 1;
 $sname = $ARGV[0];
+my $sfile = $sname;
+if (-e $sfile) {
+    if ($force) {
+	print STDERR "File $sfile exists, continuing with -f option.\n" if $v;
+    } else {
+	print STDERR "File $sfile exists. Aborted.\n";
+    }
+}
 
 #----[ Create the new perl script ]----#
 if ($lang eq "perl" || $lang eq "p") {
-    newperl($sname);
+    newperl($sname,$sfile,$v);
 } elsif ($lang eq "bash" || $lang eq "b") {
-    newbash($sname);
+    newbash($sname,$sfile,$v);
 } else {
     die "$script: * Unsupported language ($lang)\n";
 }
 
 #----[ Subroutine to create the perl script ]----#
 sub newperl {
-    my ($perl_fn) = @_;
-    print STDERR "Creating perl script $perl_fn\n";
+    my ($perl_name,$perl_file,$v) = @_;
+    print STDERR "Writing perl script $perl_name\n" if $v;
     # print <<"EOF";
-    open(SCRIPT_FILE, ">$perl_fn");
+    open(SCRIPT_FILE, ">$perl_file");
     print SCRIPT_FILE <<"EOF";
 #!/usr/bin/perl
 sub usage() { print STDERR
 "########################################################################
-# FILE: $perl_fn
+# FILE: $perl_name
 #
 # PURPOSE: $purpose
 #
-# USAGE: $perl_fn $parms
+# USAGE: $perl_name $parms
 #
 # PARAMETERS: (replace this example with pertinent info)
 #   -a option_a  Explain how the -a option_a string works here
@@ -91,7 +99,7 @@ sub usage() { print STDERR
 #   -v           Verbose mode
 #   arg1         Explain the expected values of arg1 here
 #
-# EXAMPLE: $perl_fn -v -a hello -b 23 -c testing
+# EXAMPLE: $perl_name -v -a hello -b 23 -c testing
 #
 # MODIFICATION HISTORY:
 #   $date, SK Hushing III. Original issue for Fedora.
@@ -117,7 +125,7 @@ GetOptions (
     "b=i" => \\\$integer_option_b,
     "c" => \\\$switch_option_c,
     "v+"  => \\\$v,
-) or die ("$script: * Unsupported option\\n");
+) or die "\$script: Aborted.\n";
 usage() if scalar(\@ARGV) > 0 && \$ARGV[0] eq "help";
 
 #----[ Handle command line arguments ]----#
@@ -139,24 +147,24 @@ print "arg1: \$arg1\\n";
 
 EOF
     close(SCRIPT_FILE);
-    system("chmod +x $perl_fn");
+    system("chmod +x $perl_file");
 }
 
 #----[ Subroutine to create the bash script ]----#
 sub newbash {
-    my ($bash_fn) = @_;
-    print STDERR "Creating bash script $bash_fn\n";
+    my ($bash_name,$bash_file,$v) = @_;
+    print STDERR "Writing bash script $bash_name\n" if $v;
     # print <<"EOF";
-    open(SCRIPT_FILE, ">$bash_fn");
+    open(SCRIPT_FILE, ">$bash_file");
     print SCRIPT_FILE <<"EOF";
 #!/usr/bin/bash
 usage() { echo "\\
 ########################################################################
-# FILE: $bash_fn
+# FILE: $bash_name
 #
 # PURPOSE: $purpose
 #
-# USAGE: $bash_fn $parms
+# USAGE: $bash_name $parms
 #
 # PARAMETERS: (replace this example with pertinent info)
 #   -a option_a  Explain how the -a option_a string works here
@@ -165,7 +173,7 @@ usage() { echo "\\
 #   -v           Verbose mode
 #   arg1         Explain the expected values of arg1 here
 #
-# EXAMPLE: $bash_fn -v -a hello -b 23 -c testing
+# EXAMPLE: $bash_name -v -a hello -b 23 -c testing
 #
 # MODIFICATION HISTORY:
 #   $date, SK Hushing III. Original issue for Fedora.
@@ -206,5 +214,5 @@ echo "arg1: \$arg1"
 
 EOF
     close(SCRIPT_FILE);
-    system("chmod +x $bash_fn");
+    system("chmod +x $bash_file");
 }

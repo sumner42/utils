@@ -1,2 +1,3 @@
 # FILE: vinotes
 # PURPOSE: edit user's personal notes file
+# USAGE: vinotes [-g]

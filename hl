@@ -1,1 +1,3 @@
-# highlight a string in stdin and print to stdout
+# FILE: hl
+# PURPOSE: highlight a string in stdin or file(s)
+# USAGE: hl [-c color][-g] string [files]

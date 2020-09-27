@@ -1,2 +1,3 @@
 # FILE: visyslog
 # PURPOSE: edit the system admin's change notes 
+# USAGE: vinotes [-g]

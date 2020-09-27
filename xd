@@ -1,0 +1,92 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+"########################################################################
+# FILE: xd
+#
+# PURPOSE: Print a hex dump of specified file or stdin
+#
+# USAGE: xd [-a][-h][-v] [file]
+#
+# PARAMETERS: 
+#   file     Name of file to examine. Default is stdin.
+#   -a       Don't print ASCII information.
+#   -h       Don't print header information.
+#   -v       Verbose mode
+#
+# EXAMPLES:
+#   xd binfile
+#   dd if=binfile | xd 
+#   xd < binfile
+#
+# MODIFICATION HISTORY:
+#   2020/09/27, SK Hushing III. Original issue for Fedora.
+########################################################################
+"; exit }
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = `basename $0`; chomp($script);
+
+#----[ Handle command line options ]----#
+my $noascii = 0;
+my $nohdr = 0;
+my $v = 0;
+GetOptions (
+    "a" => \$noascii,
+    "h" => \$nohdr,
+    "v+"  => \$v,
+) or die ("$script: Aborted.\n");
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
+#----[ Get file name from command line ]----#
+my $file;
+my $INPUT;
+if (scalar(@ARGV) > 0) {
+    $file = $ARGV[0];
+    open($INPUT, "<", $file) or die "$script: error opening $file\n";
+} else {
+    $file = "stdin";
+    $INPUT = "STDIN";
+    print STDERR "$script: No filename provided. Reading from stdin.\n" if $v;
+}
+
+#----[ Print input parameters ]----#
+if ($v) {
+    print "file:    $file\n";
+    print "noascii  $noascii\n";
+    print "nohdr:   $nohdr\n";
+    print "verbose: $v\n";
+}
+
+#----[ Body of script ]----#
+if (!$nohdr) {
+    print "Hex dump of $file\n";
+    print "[OFFSET]";
+    print " [------------ HEX -------------]";
+    print " [--- ASCII ----]" if !$noascii;
+    print "\n";
+}
+
+#----[ Initialize data array ]----#
+my $data[16];
+for (my $i = 0; $i < 16; $i++) $data[$i] = $i;
+
+#----[ Print test data line ]----#
+printf "%8.8x", 0;
+printf " %32.32x", 0;
+printf " %s", "................";
+print "\n";
+
+exit;
+
+#----[ Decode the data stream ]----#
+# TODO: read binary file
+while (my $line = <$INPUT>) {
+    chomp($line);
+    print "$line\n";
+    last;
+}

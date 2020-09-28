@@ -5,18 +5,25 @@ sub usage() { print STDERR
 #
 # PURPOSE: Print a hex dump of specified file or stdin
 #
-# USAGE: xd [-a][-h][-v] [file]
+# USAGE: xd [-a][-h][-o][-v] [file]
 #
 # PARAMETERS: 
 #   file     Name of file to examine. Default is stdin.
-#   -a       Don't print ASCII information.
-#   -h       Don't print header information.
+#   -a       Don't print ASCII column
+#   -h       Don't print header line
+#   -o       Don't print offset column
 #   -v       Verbose mode
 #
 # EXAMPLES:
 #   xd binfile
+#   xd -a binfile
+#   xd -aho binfile
 #   dd if=binfile | xd 
 #   xd < binfile
+#
+# NOTES:
+#   I just discovered xxd ... heavy sigh.
+#   Continuing, so I can learn more about manipulating binary data.
 #
 # MODIFICATION HISTORY:
 #   2020/09/27, SK Hushing III. Original issue for Fedora.
@@ -34,59 +41,93 @@ my $script = `basename $0`; chomp($script);
 #----[ Handle command line options ]----#
 my $noascii = 0;
 my $nohdr = 0;
+my $nooffset = 0;
 my $v = 0;
 GetOptions (
     "a" => \$noascii,
     "h" => \$nohdr,
+    "o" => \$nooffset,
     "v+"  => \$v,
 ) or die ("$script: Aborted.\n");
 usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
 
-#----[ Get file name from command line ]----#
-my $file;
-my $INPUT;
+#----[ Get file name from command line or use stdin ]----#
+my $fname = "-";
+my $infile;
 if (scalar(@ARGV) > 0) {
-    $file = $ARGV[0];
-    open($INPUT, "<", $file) or die "$script: error opening $file\n";
-} else {
-    $file = "stdin";
-    $INPUT = "STDIN";
-    print STDERR "$script: No filename provided. Reading from stdin.\n" if $v;
+    $fname = $ARGV[0];
+    open($infile, "<:raw", $fname) or die "* $script: $fname: $!\n";
 }
 
 #----[ Print input parameters ]----#
 if ($v) {
-    print "file:    $file\n";
+    print "file:    $fname\n";
     print "noascii  $noascii\n";
     print "nohdr:   $nohdr\n";
     print "verbose: $v\n";
 }
 
-#----[ Body of script ]----#
-if (!$nohdr) {
-    print "Hex dump of $file\n";
-    print "[OFFSET]";
-    print " [------------ HEX -------------]";
-    print " [--- ASCII ----]" if !$noascii;
-    print "\n";
-}
-
-#----[ Initialize data array ]----#
-my $data[16];
-for (my $i = 0; $i < 16; $i++) $data[$i] = $i;
-
-#----[ Print test data line ]----#
-printf "%8.8x", 0;
-printf " %32.32x", 0;
-printf " %s", "................";
-print "\n";
-
-exit;
-
 #----[ Decode the data stream ]----#
-# TODO: read binary file
-while (my $line = <$INPUT>) {
-    chomp($line);
-    print "$line\n";
-    last;
+my $offset = 0;
+my $bytes = 0;
+my $nbytes = 0;
+my $bufsize = 16;
+my $byte = -1;
+my $char = "_";
+my $asc = "";
+print "Reading $bufsize byte buffers)\n" if $v;
+while(1) {
+    #----[ Read a buffer of binary data ]----#
+    if ($fname eq "-") {
+	$nbytes = read(STDIN, $bytes, $bufsize);
+    } else {
+	$nbytes = read($infile, $bytes, $bufsize);
+    }
+    last if $nbytes == 0;
+
+    #----[ Print header with column titles ]----#
+    if ($offset == 0) {
+	if (!$nohdr) {
+	    print "Hex dump of $fname\n";
+	    print "[OFFSET] " if !$nooffset;
+	    print "[------------ HEX -------------]";
+	    print " [--- ASCII ----]" if !$noascii;
+	    print "\n";
+	}
+    }
+
+    #----[ Print the offset value ]----#
+    printf "%8.8X ", $offset if !$nooffset;
+
+    #----[ Print hex values of bytes ]----#
+    for (my $i=0; $i<$nbytes; $i++) {
+	$byte = vec($bytes, $i, 8);
+	printf "%2.2X", $byte;
+
+	#----[ Append to ASCII string if printable ]----#
+	$char = chr($byte);
+	if ($char =~ /[[:print:]]/) {
+	    $asc .= $char;
+	} else {
+	    $asc .= ".";
+	}
+    }
+    if ($nbytes < $bufsize) {
+	for (my $i=$nbytes; $i<$bufsize; $i++) {printf "  "}
+    }
+
+    # Print only printable ASCII chars here
+    print " $asc" if !$noascii;
+
+    # Add the newline
+    print "\n";
+
+    # Quit if no more data
+    last if $nbytes < $bufsize;
+
+    $offset += $bufsize;
+    $asc = "";
 }
+
+#----[ Close the file ]----#
+close($infile) if $fname ne "-";

@@ -32,10 +32,17 @@ GetOptions (
 usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
 
 #----[ Body of script ]----#
-for (my $wt=0; $wt<=1; $wt++) {
-    for (my $bg=40; $bg<=47; $bg++) {
+for (my $wt=1; $wt<=1; $wt++) {
+    for (my $bg=40; $bg<=48; $bg++) {
 	for (my $fg=30; $fg<=37; $fg++) {
-	    print "[${wt};${fg};${bg}m${wt};${fg};${bg}[0m ";
+	    if ($bg < 48) {
+		# print "[${wt};${fg};${bg}m${wt};${fg};${bg}[0m ";
+		print "[${wt};${fg};${bg}m ${fg};${bg} [0m ";
+	    } else {
+		# print "[${wt};${fg}m ${wt};${fg}[0m   ";
+		# print "[${wt};${fg}m   ${fg}[0m   ";
+		print "[${wt};${fg}m ${fg}  [0m   ";
+	    }
 	}
 	print "\n";
     }

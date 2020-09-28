@@ -1,5 +1,82 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+'########################################################################
 # FILE: hl
+#
 # PURPOSE: highlight a string in stdin or file(s)
-# USAGE: hl [-c color][-g] string [files]
-# NOTE: Unlike grep which highlights, hl prints all data without -g option
-echo "Testing: [32mGREEN[0m"
+#
+# USAGE: hl [-c cnum][-g][-i] string 
+#        (future)  hl [-c cnum][-g] string [files]
+#
+# PARAMETERS:
+#   -c cnum   Color number with which to highlight the found string
+#             31=red, 32=grn, 33=yel, 34=blu, 35=pur, 36=cyn, 37=wht
+#             Default is 31.
+#   -g        Grep mode - only print lines containing string
+#   -i        Ignore case. Default is case-sensitive. 
+#
+# NOTE: Unlike grep which also highlights, hl prints all lines by default
+########################################################################
+'; exit }
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = `basename $0`; chomp($script);
+
+#----[ Handle command line arguments ]----#
+my $c = "";
+my $g = 0;
+my $i = 0;
+my $v = 0;
+GetOptions (
+    "c=s" => \$c,
+    "i" => \$i,
+    "g" => \$g,
+    "v+" => \$v,
+) or die ("$script aborted\n");
+usage() if scalar(@ARGV) && $ARGV[0] eq "help";
+my $string = scalar(@ARGV) > 0 ? $ARGV[0] : "";
+
+#----[ Decode color string into a number ]----#
+my $cn = "31";
+if ($c ne "") {
+    if    ($c >=30 && $c <= 37)   {$cn = $c}
+    elsif ($c =~ /^bl?a?c?k$/)    {$cn = 30}
+    elsif ($c =~ /^re?d?$/)       {$cn = 31}
+    elsif ($c =~ /^gr?e?e?n?$/)   {$cn = 32}
+    elsif ($c =~ /^ye?l?l?o?w?$/) {$cn = 33}
+    elsif ($c =~ /^bl?u?e?$/)     {$cn = 34}
+    elsif ($c =~ /^pu?r?p?l?e?$/) {$cn = 35}
+    elsif ($c =~ /^cy?a?n?$/)     {$cn = 36}
+    elsif ($c =~ /^wh?i?t?e?$/)   {$cn = 37}
+}
+
+#----[ Verbose print arguments ]----#
+if ($v) {
+    print STDERR "string: $string\n";
+    print STDERR "c: $c\n";
+    print STDERR "cn: $cn\n";
+    print STDERR "g: $g\n";
+    print STDERR "i: $i\n";
+    print STDERR "v: $v\n";
+}
+
+#----[ Filter input lines ]----#
+while (my $line = <STDIN>) {
+    chomp($line);
+    if ($string eq "") {
+	print "$line\n";
+    } elsif ($line =~ /$string/) {
+	$line =~ s/($string)/[1;${cn}m$1[0m/g;
+	print "$line\n";
+    } elsif ($i && $line =~ /$string/i) {
+	$line =~ s/($string)/[1;${cn}m$1[0m/ig;
+	print "$line\n";
+    } elsif (!$g) {
+	print "$line\n";
+    }
+}

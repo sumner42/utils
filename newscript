@@ -55,7 +55,6 @@ GetOptions (
 usage() if scalar(@ARGV) && $ARGV[0] eq "help";
 
 #----[ Handle command line arguments ]----#
-my $narg = @ARGV;
 die "$script: * No script name provided\n" if scalar(@ARGV) < 1;
 $sname = $ARGV[0];
 my $sfile = $sname;
@@ -125,11 +124,10 @@ GetOptions (
     "b=i" => \\\$integer_option_b,
     "c" => \\\$switch_option_c,
     "v+"  => \\\$v,
-) or die "\$script: Aborted.\n";
+) or die "\$script: Aborted.\\n";
 usage() if scalar(\@ARGV) > 0 && \$ARGV[0] eq "help";
 
 #----[ Handle command line arguments ]----#
-my \$narg = \@ARGV;
 if (scalar(\@ARGV) < 1) {
     print STDERR "\$script: * Argument(s) missing\\n";
     usage();

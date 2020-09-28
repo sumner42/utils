@@ -1,1 +1,67 @@
-# backup specified list of files and directories to a tar file 
+#!/usr/bin/perl
+sub usage() { print STDERR
+"########################################################################
+# FILE: backup
+#
+# PURPOSE: Backup specified list of files and directories to a tar file
+#
+# USAGE: backup [-v] files
+#
+# PARAMETERS: 
+#   -v           Verbose mode
+#   files        List of files to backup. Default is built-in.
+#
+# EXAMPLE: backup -v bin Develop dot_files Pictures
+#
+# MODIFICATION HISTORY:
+#   2020/09/27, SK Hushing III. Original issue for Fedora.
+########################################################################
+"; exit }
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = `basename $0`; chomp($script);
+
+#----[ Handle command line options ]----#
+my $dirs = "bin Develop dot_files Pictures";
+my $v = 0;
+GetOptions (
+    "v+"  => \$v,
+) or die "$script: Aborted.
+";
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
+#----[ Handle command line arguments ]----#
+if (scalar(@ARGV) > 0) {
+    $dirs = "";
+    foreach my $dir (@ARGV) {
+	$dirs .= " " if $dirs ne "";
+	$dirs .= $dir;
+    }
+} else {
+    print STDERR "$script: backing up default directories:\n";
+}
+
+#----[ Print some variables for understanding ]----#
+my $home = $ENV{HOME};
+chdir($home);
+my $date = `date +%Y_%m%d_%H%M`; chomp($date);
+my $tarfile = "$home/Backups/backup_$date.tar";
+my $opt = $v>1 ? "cvf" : "cf";
+my $cmd = "tar $opt $tarfile $dirs";
+if ($v) {
+    print "verbose: $v\n";
+    print "home:    $home\n";
+    print "date:    $date\n";
+    print "tarfile: $tarfile\n";
+    print "dirs:    $dirs\n";
+    print "cmd:     $cmd\n";
+}
+
+#----[ Body of script ]----#
+chdir($home);
+system($cmd);

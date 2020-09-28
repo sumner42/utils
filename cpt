@@ -1,0 +1,42 @@
+#!/usr/bin/bash
+usage() { echo "\
+########################################################################
+# FILE: cpt
+#
+# PURPOSE: Copy directory recursively using find and cpio
+#
+# USAGE: cpt -v from to
+#
+# PARAMETERS: (replace this example with pertinent info)
+#   -v           Verbose mode
+#   from         Explain the expected values of arg1 here
+#
+# EXAMPLE: cpt -v dir1 dir2
+#
+# NOTES: Finally! Looks "cp -Pr dir1 dir2" will do the same thing
+#
+# MODIFICATION HISTORY:
+#   2020/09/27, SK Hushing III. Original issue for Fedora.
+########################################################################" >&2
+exit; }
+
+#----[ Initializations ]----#
+script=`basename $0`
+
+#----[ Handle command line options ]----#
+v=0
+while getopts 'a:b:cv' opt; do
+    case $opt in
+    v) v=$((v + 1));;
+    \?) usage;;
+    esac
+done
+shift "$((OPTIND - 1))"
+if [ "$1" = "help" ]; then usage; fi
+
+#----[ Get from and to dir from command line arguments ]----#
+from=$1
+to=$2
+
+#----[ Body of script ]----#
+echo "$script: Use cp -Pr $from $to"

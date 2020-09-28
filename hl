@@ -1,3 +1,5 @@
 # FILE: hl
 # PURPOSE: highlight a string in stdin or file(s)
 # USAGE: hl [-c color][-g] string [files]
+# NOTE: Unlike grep which highlights, hl prints all data without -g option
+echo "Testing: [32mGREEN[0m"

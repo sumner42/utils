@@ -1,3 +1,75 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+"########################################################################
 # FILE: rn
-# PURPOSE: rename files using wildcards
-# EXAMPLE: rn "abc" "def" *.txt
+#
+# PURPOSE: Rename multiple files
+#
+# USAGE: rn [-v] old new file_list
+#
+# PARAMETERS:
+#   old        The string to replace in each filename
+#   new        The new string to replace the old string
+#   file_list  The list of files to rename.
+#   -v         Verbose mode
+#   -x         Test mode. Do not execute any changes. Implies verbose.
+#
+# EXAMPLE: rn 'HEIC' 'heic' *.HEIC
+#
+# MODIFICATION HISTORY:
+#   2020/09/27, SK Hushing III. Original issue for Fedora.
+########################################################################
+"; exit }
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = `basename $0`; chomp($script);
+
+#----[ Handle command line options ]----#
+my $nox = 0;
+my $v = 0;
+GetOptions (
+    "x"  => \$nox,
+    "v+"  => \$v,
+) or die "$script: Aborted.\n";
+my $x = $nox ? 0 : 1;
+$v = 1 if !$v && $nox;
+print "$script: No changes will be made, due to -x option\n" if $nox;
+print "verbose: $v\n" if $v;
+print "exec: $x\n" if $v;
+my $narg = scalar(@ARGV);
+print "narg: $narg\n" if $v;
+usage() if $narg > 0 && $ARGV[0] eq "help";
+if ($narg < 3) {
+    print STDERR "$script: * Argument(s) missing\n";
+    usage();
+}
+my $old = $ARGV[0]; shift;
+print "old pattern: $old\n" if $v;
+my $new = $ARGV[0]; shift;
+print "new pattern: $new\n" if $v;
+my $nspec = scalar(@ARGV);
+print "nspec: $nspec\n" if $v;
+
+#----[ Process specified files ]----#
+for (my $i=0; $i<$nspec; $i++) {
+    print "fspec: $ARGV[$i]\n" if $v;
+    my @files = glob $ARGV[$i];
+    my $nfile = scalar(@files);
+    print "  nfile: $nfile\n" if $v;
+    foreach my $file (@files) {
+	print "  file1: $file\n" if $v;
+	next if $file !~ /$old/;
+	my $file2 = $file;
+	$file2 =~ s/$old/$new/;
+	print "  file2: $file2\n" if $v;
+	my $cmd = "mv $file $file2";
+	print "$cmd\n" if $v;
+	system($cmd) if $x;
+    }
+}
+

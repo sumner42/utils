@@ -3,12 +3,14 @@ sub usage() { print STDERR
 '########################################################################
 # FILE: dft
 #
-# PURPOSE: List mounted filesystems with sizes and summary
+# PURPOSE: List interesting mounted filesystems size/free
 #
-# USAGE: dft 
+# USAGE: dft [-h] [string]
 #
 # PARAMETERS: 
-#   -v           Verbose mode
+#   string     Optional - only list FS that match string
+#   -h         Suppress printing the header line.
+#   -v         Verbose mode
 #
 # EXAMPLE: dft -v 
 #
@@ -26,30 +28,32 @@ Getopt::Long::Configure("bundling");
 my $script = `basename $0`; chomp($script);
 
 #----[ Handle command line options ]----#
+my $h = 0;
 my $v = 0;
 GetOptions (
+    "h"   => \$h,
     "v+"  => \$v,
 ) or die ("newscript: * Unsupported option\n");
 usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
 
 #----[ Handle command line arguments ]----#
+my $string = scalar(@ARGV) > 0 ? $ARGV[0] : "";
 my $narg = @ARGV;
-if (scalar(@ARGV) >= 1) {
-    print STDERR "$script: * Unexpected argument(s) found\n" if $v;
-    usage();
+if (scalar(@ARGV) > 1) {
+    print STDERR "$script: * Unexpected argument(s) ignored\n";
 }
-# $arg1 = $ARGV[0];
 
 #----[ Body of script ]----#
-# system("df -h") if $v;
-print "#----- Beginning dft\n" if $v;
-open(DF, "-|", "df -h 2>/dev/null") or die "error opening df pipe\n";
+my $cmd = "df -h";
+print "#----- Beginning dft ($cmd)\n" if $v;
+open(DF, "-|", "$cmd 2>/dev/null") or die "error opening df pipe\n";
 while (my $line = <DF>) {
     chomp($line);
-    # print "line: $line\n" if $v;
-    # next if $line =~ "Filesystem";
-    next if $line =~ "tmpfs";
-    next if $line =~ "boot";
+    print "$line\n" if $line =~ "Filesystem" && !$h;
+    # next if $line =~ "tmpfs";
+    # next if $line =~ "boot";
+    next if $line !~ "^\/dev\/";
+    next if $string ne "" && $line !~ "$string";
     print "$line\n";
     # my ($fs,$sz,$us,$av,$pct,$mnt) = split(/  */, $line);
     # print "$fs $sz $pct $mnt\n";

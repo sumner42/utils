@@ -1,3 +1,4 @@
 # FILE: vinotes
 # PURPOSE: edit user's personal notes file
 # USAGE: vinotes [-g]
+# NOTES: Deferred. I think keeping notes in Quip has more persistence.

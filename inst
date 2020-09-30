@@ -8,8 +8,12 @@ usage() { echo "\
 # USAGE: inst [-i][-v]
 #
 # PARAMETERS:
-#   -i     Install newer files from here to ~/bin
+#   -i     Install newer scripts. Default is to just check.
+#   -n     Install new scripts that didn't exist in ~/bin
+#   -r     Reverse mode: grab changed scripts from ~/bin
 #   -v     Verbose mode
+#   -vv    Very verbose mode - lots more print
+#   -vvv   Very very verbose mode - graphically diff each changed file
 #
 # EXAMPLE: inst -v
 #
@@ -24,31 +28,89 @@ script=`basename $0`
 #----[ Handle command line options ]----#
 inst=
 v=
-while getopts 'a:b:cv' opt; do
+while getopts 'inrv' opt; do
     case $opt in
     i) inst=1;;
+    n) n=1;;
+    r) r=1;;
     v) v=$((v + 1));;
     \?) usage;;
     esac
 done
 shift "$((OPTIND - 1))"
 if [ "$1" = "help" ]; then usage; fi
+[ $v ] && [ $v -gt 1 ] && vv=1
+[ $vv ] && [ $v -gt 2 ] && vvv=1
+[ $v ] && [ $r ] && echo "$script: Reverse mode -- copy bin to source"
 
-#----[ Body of script ]----#
-dash="============================================================"
-for lcl in *; do
-    rmt=~/bin/$lcl
-    [ ! -x $lcl ] && continue
-    [ "$lcl" = "$script" ] && continue
-    # [ ! -f $rmt ] && continue
-    [ $v ] && echo "$dash $lcl"
-    diff $rmt $lcl >/dev/null 2>&1
-    s=$?
-    # if [ $s -eq 1 ]; then
-    if [ $s -ne 0 ]; then
-	echo $s $lcl
+#----[ Ensure this script is being run from scripts source dir ]----#
+here=`pwd`
+[ $vv ] && echo "$script: Running from $here"
+case "$here" in
+*/scripts) ;;
+*) echo "$script: * Must be run from scripts dir. Aborted."; exit;;
+esac
+
+#----[ Look at all files in this scripts directory ]----#
+line="============================================================"
+for srcfile in *; do
+    action="Copying"
+    binfile=~/bin/$srcfile
+    
+    #----[ Check for reverse mode ]----#
+    if [ $r ]; then
+	action="Reverse $action"
+	from=$binfile
+	to=$srcfile
+    else
+	from=$srcfile
+	to=$binfile
+    fi
+
+    #----[ Skip non-executable files ]----#
+    [ ! -x $from ] && continue
+
+    #----[ Skip myself (the inst script) ]----#
+    [ "$from" = "$script" ] && continue
+
+    #----[ Examine this file ]----#
+    [ $vv ] && echo "$line $from"
+
+    #----[ Skip non-existent files unless -n specified ]----#
+    if [ ! -f $to ]; then
+	if [ $n ]; then
+	    [ $v ] && echo "$to doesn't exist - continuing with -n option"
+	    action="$action non-existent"
+	else
+	    [ $v ] && echo "$to doesn't exist - skipping"
+	    continue
+	fi
+    fi
+
+    #----[ Compare from and to files ]----#
+    [ $vv ] && echo "Checking $from -- $to"
+    diff $from $to >/dev/null 2>&1
+    stat=$?
+    if [ $stat -ne 0 ]; then
+	[ $v ] && echo "(stat $stat) diff $from $to"
+
+	#----[ Do a visual diff/merge with vvv mode ]----#
+	[ $vvv ] && meld $from $to
+
+	#----[ Check if destination is newer ]----#
+	if [ $to -nt $from ]; then
+	    echo "$script: * TO file is newer! Will not replace"
+	    continue
+	fi
+
+	#----[ Create and run the copy command ]----#
+	cmd="cp -p $from $to"
+	[ $vv ] && echo "$cmd"
 	if [ $inst ]; then
-	    echo "cp $lcl $rmt"
+	    echo "$action $from to $to"
+	    $cmd
+	else
+	    echo "NOT $action $from to $to"
 	fi
     fi
 done

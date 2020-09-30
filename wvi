@@ -50,5 +50,5 @@ print "Selected editor is $ed\n" if $v;
 #----[ Find the Path To the Script using which ]----#
 my $pts = `which $file` or die "$script: Error finding $file. Aborted.\n"; chomp($pts);
 my $cmd = "$ed $pts";
-print "system($cmd)\n" if $v;
-# system("$cmd");
+print "$cmd\n" if $v;
+system("$cmd");

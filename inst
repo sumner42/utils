@@ -80,7 +80,7 @@ for srcfile in *; do
     if [ ! -f $to ]; then
 	if [ $n ]; then
 	    [ $v ] && echo "$to doesn't exist - continuing with -n option"
-	    action="$action non-existent"
+	    action="$action new"
 	else
 	    [ $v ] && echo "$to doesn't exist - skipping"
 	    continue

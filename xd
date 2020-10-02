@@ -8,15 +8,24 @@ sub usage() { print STDERR
 # USAGE: xd [-a][-h][-o][-v] [file]
 #
 # PARAMETERS: 
-#   file     Name of file to examine. Default is stdin.
-#   -a       Don't print ASCII column
-#   -h       Don't print header line
-#   -o       Don't print offset column
-#   -v       Verbose mode
+#   file        Name of file to examine. Default is stdin.
+#   -a          Don't print the ASCII column
+#   -g bytes    Number of bytes per print group (2,4,8,16). Default 16.
+#   -h          Don't print the header line
+#   -o          Don't print the address offset column
+#   -O offset   Start dumping at specified offset within input stream
+#               offset value can be decimal, or hex preceeded by 0x
+#   -n lines    Max number of lines to print
+#   -v          Verbose mode for troubleshooting
+#
+# FUTURE PLANS:
+#   -s          Enable shared memory dumping (numeric filenames)
+#   -z          Only print non-zero lines
+#   -Z          Only print zero lines
 #
 # EXAMPLES:
 #   xd binfile
-#   xd -a binfile
+#   xd -a -O 0x40 binfile
 #   xd -aho binfile
 #   dd if=binfile | xd 
 #   xd < binfile
@@ -39,17 +48,60 @@ Getopt::Long::Configure("bundling");
 my $script = `basename $0`; chomp($script);
 
 #----[ Handle command line options ]----#
-my $noascii = 0;
-my $nohdr = 0;
-my $nooffset = 0;
+my $grpSiz = 16;
+my $maxLine = 0;
+my $noAsc = 0;
+my $noHdr = 0;
+my $noAddr = 0;
+my $allowShm = 0;
+my $z_none = 0;
+my $offset = "";
+my $z_all = 0;
 my $v = 0;
 GetOptions (
-    "a" => \$noascii,
-    "h" => \$nohdr,
-    "o" => \$nooffset,
+    "a" => \$noAsc,
+    "h" => \$noHdr,
+    "g=i" => \$grpSiz,
+    "n=i" => \$maxLine,
+    "o" => \$noAddr,
+    "O=s" => \$offset,
+    "s" => \$allowShm,
     "v+"  => \$v,
+    "z" => \$z_none,
+    "Z" => \$z_all,
 ) or die ("$script: Aborted.\n");
 usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
+#----[ Validate options ]----#
+my %groups = (
+    2  => 1, 
+    4  => 1,
+    8  => 1, 
+    16 => 1, 
+);
+my %hexHdr = (
+    2  => "[--------------- HEX -----------------]", 
+    4  => "[------------- HEX ---------------]",
+    8  => "[------------ HEX --------------]", 
+    16 => "[------------ HEX -------------]", 
+);
+if ($z_all && $z_none) {
+    die("$script: Incompatible options (-z and -Z). Aborted.\n");
+} elsif (!$groups{$grpSiz}) {
+    die("$script: Unsupported group size (-g $grpSiz). Aborted.\n");
+} elsif ($offset ne "") {
+    if ($offset =~ /^0x[0-9A-F]+$/) {
+	$offset = hex($offset);
+    } elsif ($offset !~ /^[0-9A-F]+$/) {
+	die("$script: invalid offset value -O $offset. Aborted.\n");
+    }
+} elsif ($z_none) {
+    die("$script: Option (-z) not yet supported. Aborted.\n");
+} elsif ($z_all) {
+    die("$script: Option (-Z) not yet supported. Aborted.\n");
+} elsif ($allowShm) {
+    die("$script: Option (-s) not yet supported. Aborted.\n");
+}
 
 #----[ Get file name from command line or use stdin ]----#
 my $fname = "-";
@@ -61,21 +113,29 @@ if (scalar(@ARGV) > 0) {
 
 #----[ Print input parameters ]----#
 if ($v) {
-    print "file:    $fname\n";
-    print "noascii  $noascii\n";
-    print "nohdr:   $nohdr\n";
-    print "verbose: $v\n";
+    print  "file:       $fname\n";
+    print  "groupSize:  $grpSiz\n";
+    print  "noAsc:      $noAsc\n";
+    print  "noHdr:      $noHdr\n";
+    print  "noAddr:     $noAddr\n";
+    print  "allowShm:   $allowShm\n";
+    print  "maxLine:    $maxLine\n";
+    printf "offset:     0x%8.8X\n", $offset;
+    print  "verbose:    $v\n";
+    print  "z_all       $z_all\n";
+    print  "z_none      $z_none\n";
 }
 
 #----[ Decode the data stream ]----#
-my $offset = 0;
+my $addr = 0;
 my $bytes = 0;
 my $nbytes = 0;
 my $bufsize = 16;
 my $byte = -1;
 my $char = "_";
 my $asc = "";
-print "Reading $bufsize byte buffers)\n" if $v;
+my $nline = 0;
+print "Reading $bufsize byte buffers\n" if $v;
 while(1) {
     #----[ Read a buffer of binary data ]----#
     if ($fname eq "-") {
@@ -84,48 +144,69 @@ while(1) {
 	$nbytes = read($infile, $bytes, $bufsize);
     }
     last if $nbytes == 0;
+    # print "TEST ", $addr+15, ": ";
 
-    #----[ Print header with column titles ]----#
-    if ($offset == 0) {
-	if (!$nohdr) {
-	    print "Hex dump of $fname\n";
-	    print "[OFFSET] " if !$nooffset;
-	    print "[------------ HEX -------------]";
-	    print " [--- ASCII ----]" if !$noascii;
-	    print "\n";
-	}
+    #----[ Skip this line if before specified offset ]----#
+    # next if $offset > 0 && $addr+$bufsize <= $offset;
+    if (($offset > 0) && ($addr+$bufsize <= $offset)) {
+	printf "SKIP: %8.8X-%8.8X\n", $addr, $addr+$bufsize-1 if $v>1;
+	$addr += $bufsize;
+	next;
     }
 
-    #----[ Print the offset value ]----#
-    printf "%8.8X ", $offset if !$nooffset;
+    #----[ Print header with column titles ]----#
+    if (!$noHdr && $nline == 0) {
+	print "Dumping: $fname";
+	    printf ", Offset %8.8x", $offset if $offset;
+	    print "\n";
+	print "[OFFSET] " if !$noAddr;
+	print $hexHdr{$grpSiz};
+	print " [--- ASCII ----]" if !$noAsc;
+	print "\n";
+    }
+
+    #----[ Print the current file address ]----#
+    printf "%8.8X ", $addr if !$noAddr;
 
     #----[ Print hex values of bytes ]----#
+    my $nbprt = 0;
     for (my $i=0; $i<$nbytes; $i++) {
-	$byte = vec($bytes, $i, 8);
-	printf "%2.2X", $byte;
+	if ($addr+$nbprt >= $offset) {
+	    $byte = vec($bytes, $i, 8);
+	    printf "%2.2X", $byte;
 
-	#----[ Append to ASCII string if printable ]----#
-	$char = chr($byte);
-	if ($char =~ /[[:print:]]/) {
-	    $asc .= $char;
+	    #----[ Append to ASCII string if printable ]----#
+	    $char = chr($byte);
+	    if ($char =~ /[[:print:]]/) {
+		$asc .= $char;
+	    } else {
+		$asc .= ".";
+	    }
 	} else {
-	    $asc .= ".";
+	    print "  ";
+	    $asc .= " ";
 	}
+	$nbprt++;
+	print " " if !($nbprt % $grpSiz) && $nbprt != 16;
     }
     if ($nbytes < $bufsize) {
 	for (my $i=$nbytes; $i<$bufsize; $i++) {printf "  "}
     }
 
-    # Print only printable ASCII chars here
-    print " $asc" if !$noascii;
+    #----[ Print only printable ASCII chars here ]----#
+    print " $asc" if !$noAsc;
 
-    # Add the newline
+    #----[ Add the newline ]----#
     print "\n";
 
-    # Quit if no more data
+    #----[ Quit if maxLine reached ]----#
+    $nline++;
+    last if $maxLine > 0 && $nline >= $maxLine;
+
+    #----[ Quit if no more data ]----#
     last if $nbytes < $bufsize;
 
-    $offset += $bufsize;
+    $addr += $bufsize;
     $asc = "";
 }
 

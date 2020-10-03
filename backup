@@ -3,13 +3,13 @@ sub usage() { print STDERR
 "########################################################################
 # FILE: backup
 #
-# PURPOSE: Backup specified list of files and directories to a tar file
+# PURPOSE: Backup user changed directories to a tar file
 #
-# USAGE: backup [-v] files
+# USAGE: backup [-v] [dirs]
 #
 # PARAMETERS: 
 #   -v           Verbose mode
-#   files        List of files to backup. Default is built-in.
+#   [dirs]       List of directories to backup. Default is built-in.
 #
 # EXAMPLE: backup -v bin Develop dot_files Pictures
 #
@@ -25,9 +25,13 @@ Getopt::Long::Configure("bundling");
 
 #----[ Initializations ]----#
 my $script = `basename $0`; chomp($script);
+my $date = `date +%Y_%m%d_%H%M`; chomp($date);
+my $home = $ENV{HOME};
+my $tarfile = "$home/Backups/backup_$date.tar";
+chdir($home);
 
 #----[ Handle command line options ]----#
-my $dirs = "bin Develop dot_files Pictures";
+my $dirs = "bin Dev-bk Develop dot_files Pictures";
 my $v = 0;
 GetOptions (
     "v+"  => \$v,
@@ -35,33 +39,42 @@ GetOptions (
 ";
 usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
 
-#----[ Handle command line arguments ]----#
+#----[ Create tar command ]----#
+my $vopt = $v>1 ? "v" : "";
+my $cmd = "tar c${vopt}f $tarfile $dirs";
+
+#----[ Process list of directories to backup ]----#
 if (scalar(@ARGV) > 0) {
     $dirs = "";
     foreach my $dir (@ARGV) {
+	die("$script: No such directory ($dir)\n") if ! -d $dir;
 	$dirs .= " " if $dirs ne "";
 	$dirs .= $dir;
     }
+    print STDERR "$script: backing up specified directories\n";
 } else {
-    print STDERR "$script: backing up default directories:\n";
+    print STDERR "$script: backing up default directories\n";
 }
 
 #----[ Print some variables for understanding ]----#
-my $home = $ENV{HOME};
-chdir($home);
-my $date = `date +%Y_%m%d_%H%M`; chomp($date);
-my $tarfile = "$home/Backups/backup_$date.tar";
-my $opt = $v>1 ? "cvf" : "cf";
-my $cmd = "tar $opt $tarfile $dirs";
 if ($v) {
-    print "verbose: $v\n";
+    print "dirs:    $dirs\n";
     print "home:    $home\n";
     print "date:    $date\n";
     print "tarfile: $tarfile\n";
-    print "dirs:    $dirs\n";
     print "cmd:     $cmd\n";
 }
 
-#----[ Body of script ]----#
-chdir($home);
+#----[ Grab current copies of dot files to dot_files directory ]----#
+print "Copying certain dot files to dot_files directory\n" if $v;
+system("cp -p .bash_logout dot_files/.");
+system("cp -p .bash_profile dot_files/.");
+system("cp -p .bashrc dot_files/.");
+system("cp -p .exrc dot_files/.");
+system("cp -p .gitconfig dot_files/.");
+system("cp -p .gvimrc dot_files/.");
+system("cp -p .viminfo dot_files/.");
+system("cp -p .viminfo dot_files/.");
+
+#----[ Create tarfile ]----#
 system($cmd);

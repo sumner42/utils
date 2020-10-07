@@ -27,22 +27,18 @@ Getopt::Long::Configure("bundling");
 my $script = `basename $0`; chomp($script);
 my $date = `date +%Y_%m%d_%H%M`; chomp($date);
 my $home = $ENV{HOME};
-my $dotfiles = "Backups/dot_files";
+my $dotdir = "Backups/dot_files";
 my $tarfile = "$home/Backups/backup_$date.tar";
 chdir($home);
 
 #----[ Handle command line options ]----#
-my $dirs = "$dotfiles bin Develop Pictures";
+my $dirs = "$dotdir bin Develop Pictures Reports";
 my $v = 0;
 GetOptions (
     "v+"  => \$v,
 ) or die "$script: Aborted.
 ";
 usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
-
-#----[ Create tar command ]----#
-my $vopt = $v>1 ? "v" : "";
-my $cmd = "tar c${vopt}f $tarfile $dirs";
 
 #----[ Process list of directories to backup ]----#
 if (scalar(@ARGV) > 0) {
@@ -59,22 +55,27 @@ if (scalar(@ARGV) > 0) {
 
 #----[ Print some variables for understanding ]----#
 if ($v) {
-    print "dirs:    $dirs\n";
-    print "home:    $home\n";
     print "date:    $date\n";
+    print "home:    $home\n";
+    print "dirs:    $dirs\n";
     print "tarfile: $tarfile\n";
-    print "cmd:     $cmd\n";
 }
 
 #----[ Grab current copies of dot files to dot_files directory ]----#
-print "Copying certain dot files to $dotfiles directory\n" if $v;
-system("cp -p .bash_logout $dotfiles/.");
-system("cp -p .bash_profile $dotfiles/.");
-system("cp -p .bashrc $dotfiles/.");
-system("cp -p .exrc $dotfiles/.");
-system("cp -p .gitconfig $dotfiles/.");
-system("cp -p .gvimrc $dotfiles/.");
-system("cp -p .viminfo $dotfiles/.");
+print "Copying some hidden/dot files to dir: $dotdir\n" if $v;
+system("cp -p .bash_logout $dotdir/.");
+system("cp -p .bash_profile $dotdir/.");
+system("cp -p .bashrc $dotdir/.");
+system("cp -p .exrc $dotdir/.");
+system("cp -p .gitconfig $dotdir/.");
+system("cp -p .gvimrc $dotdir/.");
+system("cp -p .viminfo $dotdir/.");
 
-#----[ Create tarfile ]----#
+#----[ Create tar command ]----#
+my $vopt = $v>1 ? "v" : "";
+my $cmd = "tar c${vopt}f $tarfile $dirs";
+
+#----[ Backup to tarfile ]----#
+print "Backing up specified files\n" if $v;
+print "$cmd\n" if $v;
 system($cmd);

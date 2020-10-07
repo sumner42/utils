@@ -1,0 +1,70 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+"########################################################################
+# FILE: hdr
+#
+# PURPOSE: Print a one-line header message preceeded by dashes
+#
+# USAGE: hdr [-c color][-w width] 'message'
+#
+# PARAMETERS:
+#   message   The message to print
+#   -c color  Print the line in the specified color
+#             31=red, 32=grn, 33=yel, 34=blu, 35=pur, 36=cyn, 37=wht
+#   -w width  The width of the line to print
+#
+# EXAMPLE: hdr 'This is a test'
+#
+# MODIFICATION HISTORY:
+#   2020/10/06, SK Hushing III. Original issue for Fedora.
+########################################################################
+"; exit }
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = `basename $0`; chomp($script);
+
+#----[ Handle command line options ]----#
+my $c = 0;
+my $v = 0;
+my $w = 80;
+GetOptions (
+    "c=s" => \$c,
+    "w=i" => \$w,
+    "v+"  => \$v,
+) or die "$script: Aborted.\n";
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+die("$script: No message specified. Aborted.\n") if scalar(@ARGV) < 1;
+my $message = $ARGV[0];
+
+#----[ Decode color string into a number ]----#
+my $cn = "0";
+if ($c ne "") {
+    if    ($c =~ /^bl?a?c?k$/)    {$cn = 30}
+    elsif ($c =~ /^re?d?$/)       {$cn = 31}
+    elsif ($c =~ /^gr?e?e?n?$/)   {$cn = 32}
+    elsif ($c =~ /^ye?l?l?o?w?$/) {$cn = 33}
+    elsif ($c =~ /^bl?u?e?$/)     {$cn = 34}
+    elsif ($c =~ /^pu?r?p?l?e?$/) {$cn = 35}
+    elsif ($c =~ /^cy?a?n?$/)     {$cn = 36}
+    elsif ($c =~ /^wh?i?t?e?$/)   {$cn = 37}
+    elsif ($c >=30 && $c <= 37)   {$cn = $c}
+    else                          {$cn = 0}
+}
+
+
+#----[ Build a string of dashes to fill the line before the message ]----#
+my $nchar = length($message);
+my $line = ($nchar < ($w) ? '-' x ($w-$nchar-1) . " ": '');
+my $out = "${line}${message}";
+
+#----[ Print the header line ]----#
+if ($cn > 0) {
+    print "[1;${cn}m" . $out . "[0m" . "\n";
+} else {
+    print "$out\n";
+}

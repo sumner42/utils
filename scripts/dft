@@ -3,7 +3,7 @@ sub usage() { print STDERR
 '########################################################################
 # FILE: dft
 #
-# PURPOSE: List interesting mounted filesystems size/free
+# PURPOSE: List size/free of interesting mounted filesystems
 #
 # USAGE: dft [-h] [string]
 #

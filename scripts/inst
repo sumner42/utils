@@ -3,14 +3,14 @@ usage() { echo "\
 ########################################################################
 # FILE: inst
 #
-# PURPOSE: Check for older scripts in ~/bin directory that need replacing
+# PURPOSE: Install newer scripts to ~/bin directory 
 #
-# USAGE: inst [-i][-v]
+# USAGE: inst [-i][-n][-r][-v]
 #
 # PARAMETERS:
 #   -i     Install newer scripts. Default is to just check.
-#   -n     Install new scripts that didn't exist in ~/bin
-#   -r     Reverse mode: grab changed scripts from ~/bin
+#   -n     Install new scripts that don't yet exist in ~/bin
+#   -r     Reverse mode: grab changed scripts from ~/bin (be careful!)
 #   -v     Verbose mode
 #   -vv    Very verbose mode - lots more print
 #   -vvv   Very very verbose mode - graphically diff each changed file

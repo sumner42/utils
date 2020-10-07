@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+"########################################################################
+# FILE: get_free_home
+#
+# PURPOSE: Get current free space for /home and append to free_home.txt
+#
+# USAGE: get_free_home [-v]
+#
+# PARAMETERS:
+#   -v      Verbose mode
+#
+# EXAMPLE: get_free_home -v
+#
+# MODIFICATION HISTORY:
+#   2020/10/06, SK Hushing III. Original issue for Fedora.
+########################################################################
+"; exit }
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = `basename $0`; chomp($script);
+
+#----[ Handle command line options ]----#
+my $v = 0;
+GetOptions (
+    "v+"  => \$v,
+) or die "$script: Aborted.\n";
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
+#----[ Body of script ]----#
+my $date = `/usr/bin/date +"%D %T"`; chomp($date);
+my $free = `/usr/bin/df /home | awk '/dev.*home/{print \$4}'`; chomp($free);
+print "$date	$free\n";

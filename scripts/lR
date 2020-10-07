@@ -1,2 +1,12 @@
 #!/bin/bash
-ls -lFaR --color=auto $@
+########################################################################
+# FILE: lR
+#
+# PURPOSE: Long directory list, no group, recursive
+#
+# USAGE: lR [directory]
+#
+# MODIFICATION HISTORY:
+#   2020/10/02, SK Hushing III. Original issue for Fedora.
+########################################################################
+ls -lFoR --color=auto $@

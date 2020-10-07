@@ -1,2 +1,12 @@
 #!/bin/bash
+########################################################################
+# FILE: lx
+#
+# PURPOSE: Short wide directory list, each column sorted alphabetically
+#
+# USAGE: lx [directory]
+#
+# MODIFICATION HISTORY:
+#   2020/09/18, SK Hushing III. Original issue for Fedora.
+########################################################################
 ls -CF --color=auto $@

@@ -1,2 +1,12 @@
 #!/bin/bash
+########################################################################
+# FILE: la
+#
+# PURPOSE: Long directory list, show group column and hidden files
+#
+# USAGE: la [directory]
+#
+# MODIFICATION HISTORY:
+#   2020/09/18, SK Hushing III. Original issue for Fedora.
+########################################################################
 ls -lFa --color=auto $@

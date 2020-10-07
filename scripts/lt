@@ -1,2 +1,12 @@
 #!/bin/bash
-ls -lFtr --color=auto $@
+########################################################################
+# FILE: lt
+#
+# PURPOSE: Long directory list, no group, most recently modified at bottom
+#
+# USAGE: lt [directory]
+#
+# MODIFICATION HISTORY:
+#   2020/10/18, SK Hushing III. Original issue for Fedora.
+########################################################################
+ls -lFotr --color=auto $@

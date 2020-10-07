@@ -1,2 +1,12 @@
 #!/bin/bash
-ls -lFi --color=auto $@
+########################################################################
+# FILE: li
+#
+# PURPOSE: Long directory list, no group, show inode numbers
+#
+# USAGE: li [directory]
+#
+# MODIFICATION HISTORY:
+#   2020/09/23, SK Hushing III. Original issue for Fedora.
+########################################################################
+ls -lFoi --color=auto $@

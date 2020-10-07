@@ -1,12 +1,12 @@
 #!/bin/bash
 ########################################################################
-# FILE: lh
+# FILE: ll
 #
-# PURPOSE: Long directory list, human-friendly size column
+# PURPOSE: Long directory list, no group column, show filetypes
 #
-# USAGE: lh [directory]
+# USAGE: ll [directory]
 #
 # MODIFICATION HISTORY:
-#   2020/09/25, SK Hushing III. Original issue for Fedora.
+#   2020/10/07, SK Hushing III. Original issue for Fedora.
 ########################################################################
-ls -lFoh --color=auto $@
+ls -lFo --color=auto $@

@@ -3,7 +3,7 @@ sub usage() { print STDERR
 "########################################################################
 # FILE: backup
 #
-# PURPOSE: Backup user changed directories to a tar file
+# PURPOSE: Backup my favorite directories to a tar file under ~/Backups
 #
 # USAGE: backup [-v] [dirs]
 #
@@ -11,7 +11,7 @@ sub usage() { print STDERR
 #   -v           Verbose mode
 #   [dirs]       List of directories to backup. Default is built-in.
 #
-# EXAMPLE: backup -v bin Develop dot_files Pictures
+# EXAMPLE: backup -v Backups/dot_files bin Develop Pictures
 #
 # MODIFICATION HISTORY:
 #   2020/09/27, SK Hushing III. Original issue for Fedora.
@@ -27,11 +27,12 @@ Getopt::Long::Configure("bundling");
 my $script = `basename $0`; chomp($script);
 my $date = `date +%Y_%m%d_%H%M`; chomp($date);
 my $home = $ENV{HOME};
+my $dotfiles = "Backups/dot_files";
 my $tarfile = "$home/Backups/backup_$date.tar";
 chdir($home);
 
 #----[ Handle command line options ]----#
-my $dirs = "bin Dev-bk Develop dot_files Pictures";
+my $dirs = "$dotfiles bin Develop Pictures";
 my $v = 0;
 GetOptions (
     "v+"  => \$v,
@@ -66,15 +67,14 @@ if ($v) {
 }
 
 #----[ Grab current copies of dot files to dot_files directory ]----#
-print "Copying certain dot files to dot_files directory\n" if $v;
-system("cp -p .bash_logout dot_files/.");
-system("cp -p .bash_profile dot_files/.");
-system("cp -p .bashrc dot_files/.");
-system("cp -p .exrc dot_files/.");
-system("cp -p .gitconfig dot_files/.");
-system("cp -p .gvimrc dot_files/.");
-system("cp -p .viminfo dot_files/.");
-system("cp -p .viminfo dot_files/.");
+print "Copying certain dot files to $dotfiles directory\n" if $v;
+system("cp -p .bash_logout $dotfiles/.");
+system("cp -p .bash_profile $dotfiles/.");
+system("cp -p .bashrc $dotfiles/.");
+system("cp -p .exrc $dotfiles/.");
+system("cp -p .gitconfig $dotfiles/.");
+system("cp -p .gvimrc $dotfiles/.");
+system("cp -p .viminfo $dotfiles/.");
 
 #----[ Create tarfile ]----#
 system($cmd);

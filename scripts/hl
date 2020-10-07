@@ -44,8 +44,7 @@ my $string = scalar(@ARGV) > 0 ? $ARGV[0] : "";
 #----[ Decode color string into a number ]----#
 my $cn = "31";
 if ($c ne "") {
-    if    ($c >=30 && $c <= 37)   {$cn = $c}
-    elsif ($c =~ /^bl?a?c?k$/)    {$cn = 30}
+    if    ($c =~ /^bl?a?c?k$/)    {$cn = 30}
     elsif ($c =~ /^re?d?$/)       {$cn = 31}
     elsif ($c =~ /^gr?e?e?n?$/)   {$cn = 32}
     elsif ($c =~ /^ye?l?l?o?w?$/) {$cn = 33}
@@ -53,6 +52,7 @@ if ($c ne "") {
     elsif ($c =~ /^pu?r?p?l?e?$/) {$cn = 35}
     elsif ($c =~ /^cy?a?n?$/)     {$cn = 36}
     elsif ($c =~ /^wh?i?t?e?$/)   {$cn = 37}
+    elsif ($c >=30 && $c <= 37)   {$cn = $c}
 }
 
 #----[ Verbose print arguments ]----#

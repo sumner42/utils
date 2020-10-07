@@ -5,9 +5,11 @@ sub usage() { print STDERR
 #
 # PURPOSE: Reformat the git log into a single line per event
 #
-# USAGE: gitlog [string]
+# USAGE: gitlog [-a][-n maxline][-v] [string]
 #
 # PARAMETERS:
+#   -a           Print all log entires. Default is most recent 10 lines.
+#   -n maxline   Max lines to print, unless -a specified. Default is 10.
 #   -v           Verbose mode
 #   string       Only print lines containing string.
 #
@@ -29,8 +31,12 @@ Getopt::Long::Configure("bundling");
 my $script = `basename $0`; chomp($script);
 
 #----[ Handle command line options ]----#
+my $a = 0;
+my $maxline = 10;
 my $v = 0;
 GetOptions (
+    "a"   => \$a,
+    "n=i" => \$maxline,
     "v+"  => \$v,
 ) or die ("newscript: * Unsupported option\n");
 usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
@@ -40,6 +46,7 @@ my $string = scalar(@ARGV) > 0 ? $ARGV[0] : "";
 print "$script: searching gitlog for ($string)\n" if $string ne "" && $v;
 
 #----[ Body of script ]----#
+my $nline = 0;
 my $out = "";
 open(LOG, "-|", "git log 2>/dev/null");
 while (my $line = <LOG>) {
@@ -57,6 +64,8 @@ while (my $line = <LOG>) {
 	# print "$line\n";
 	$out .= $line;
 	print "$out\n" if $string eq "" || $string ne "" && $line =~ /$string/;
+	$nline++;
+	last if !$a && $nline >= $maxline;
     }
 }
 close(LOG);

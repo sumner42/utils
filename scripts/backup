@@ -62,14 +62,20 @@ if ($v) {
 }
 
 #----[ Grab current copies of dot files to dot_files directory ]----#
-print "Copying some hidden/dot files to dir: $dotdir\n" if $v;
-system("cp -p .bash_logout $dotdir/.");
-system("cp -p .bash_profile $dotdir/.");
-system("cp -p .bashrc $dotdir/.");
-system("cp -p .exrc $dotdir/.");
-system("cp -p .gitconfig $dotdir/.");
-system("cp -p .gvimrc $dotdir/.");
-system("cp -p .viminfo $dotdir/.");
+print "Copying some hidden/dot files to $dotdir\n" if $v;
+my @dots = (
+    ".bash_logout",
+    ".bash_profile",
+    ".bashrc",
+    ".exrc",
+    ".gitconfig",
+    ".gvimrc",
+    ".viminfo",
+);
+foreach my $dot (@dots) {
+    print "  Copying $dot\n" if $v>1;
+    system("cp -p $dot $dotdir/.");
+};
 
 #----[ Create tar command ]----#
 my $vopt = $v>1 ? "v" : "";

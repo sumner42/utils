@@ -1,0 +1,12 @@
+#!/bin/bash
+########################################################################
+# FILE: lg
+#
+# PURPOSE: Long directory list, show group and filetype
+#
+# USAGE: lg [directory]
+#
+# MODIFICATION HISTORY:
+#   2020/10/07, SK Hushing III. Original issue for Fedora.
+########################################################################
+ls -lF --color=auto $@

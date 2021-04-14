@@ -99,7 +99,7 @@ for srcfile in *; do
 
 	#----[ Check if destination is newer ]----#
 	if [ $to -nt $from ]; then
-	    echo "$script: * TO file is newer! Will not replace"
+	    echo "$script: * TO file $to is newer! Will not replace"
 	    continue
 	fi
 

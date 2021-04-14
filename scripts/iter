@@ -1,0 +1,91 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+qq(########################################################################
+# FILE: iter
+#
+# PURPOSE: Print an iteration of numbers
+#
+# USAGE: iter [first] last [incr]
+#
+# PARAMETERS: (replace this example with pertinent info)
+#   first    First number to print
+#   last     Last number to print
+#   incr     Amount to increment between numbers. Default is 1.
+#            Will be inverted if first > last.
+#   -d dig   Number of digits to print, with leading zeroes if necessary.
+#   -v       Verbose mode
+#
+# EXAMPLES:
+#   iter 10
+#   iter 11 20
+#   iter 10 1
+#   iter 2 10 2
+#
+# NOTES:
+#   If a negative number is desired, put -- before arguments.
+#   Capability already exists in Fedora - see seq!
+#
+# MODIFICATION HISTORY:
+#   2020/10/16, SK Hushing III. Original issue for Fedora.
+########################################################################
+); exit }
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = `basename $0`; chomp($script);
+
+#----[ Handle command line options ]----#
+my $first = 1;
+my $last = 1;
+my $incr = 1;
+my $v = 0;
+my $d = 0;
+GetOptions (
+    "d=i" => \$d,
+    "v+"  => \$v,
+) or die "$script: Aborted.\n";
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
+#----[ Handle command line arguments ]----#
+my $narg = scalar(@ARGV);
+if ($narg < 1) {
+    print STDERR "$script: * Argument(s) missing\n";
+    usage();
+} elsif ($narg == 1) {
+    $last = $ARGV[0];
+} elsif ($narg == 2) {
+    $first = $ARGV[0];
+    $last = $ARGV[1];
+} elsif ($narg == 3) {
+    $first = $ARGV[0];
+    $last = $ARGV[1];
+    $incr = $ARGV[2];
+} else {
+    print STDERR "$script: * Unexpected argument(s)\n";
+    usage();
+}
+
+#----[ Print some variables for understanding ]----#
+print "first: $first\n" if $v;
+print "last: $last\n" if $v;
+print "incr: $incr\n" if $v;
+print "verbose: $v\n" if $v;
+
+#----[ Body of script ]----#
+die ("Invalid increment $incr\n") if scalar($incr) == 0;
+if ($first <= $last) {
+    $incr = -$incr if $incr < 0;
+    for (my $i=$first; $i<=$last; $i+=$incr) { 
+        print "$i"; print " " if $i ne $last;
+    }
+} else {
+    $incr = -$incr if $incr < 0;
+    for (my $i=$first; $i>=$last; $i-=$incr) {
+        print "$i"; print " " if $i ne $last;
+    }
+}
+print "\n";

@@ -29,7 +29,7 @@ my $v = 0;
 GetOptions (
     "w=i" => \$width,
     "v+"  => \$v,
-) or die ("newscript: * Unsupported option\n");
+) or die ("$script: * Unsupported option\n");
 
 #----[ Handle command line arguments ]----#
 if (scalar(@ARGV) > 0) {

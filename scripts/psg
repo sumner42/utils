@@ -37,7 +37,7 @@ GetOptions (
     "h" => \$nohdr,
     "s" => \$nosys,
     "v+" => \$v,
-) or die ("Command line error\n");
+) or die ("$script: Command line error\n");
 usage() if scalar(@ARGV) && $ARGV[0] eq "help";
 $string = $ARGV[0] if scalar(@ARGV) > 0;
 

@@ -28,7 +28,7 @@ my $script = `basename $0`; chomp($script);
 my $v = 0;
 GetOptions (
     "v+"  => \$v,
-) or die ("newscript: * Unsupported option\n");
+) or die ("$script: * Unsupported option\n");
 usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
 
 #----[ Body of script ]----#

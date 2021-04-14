@@ -38,7 +38,7 @@ GetOptions (
     "a"   => \$a,
     "n=i" => \$maxline,
     "v+"  => \$v,
-) or die ("newscript: * Unsupported option\n");
+) or die ("$script: * Unsupported option\n");
 usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
 
 #----[ Handle command line argument ]----#

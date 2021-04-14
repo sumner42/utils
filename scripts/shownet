@@ -1,0 +1,140 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+"########################################################################
+# FILE: shownet
+#
+# PURPOSE: Show network interface ipv4 addresses, netmask, broadcast
+#
+# USAGE: shownet [-v][stg]
+#
+# PARAMETERS: (replace this example with pertinent info)
+#   -v           Verbose mode
+#   stg          Only list lines that contain stg
+#
+# EXAMPLE: shownet testing
+#
+# Other network commands of interest:
+#   ifconfig -a
+#   netstat -i
+#   ip link show
+#   nmcli device status
+#   nmcli connection show
+#
+# MODIFICATION HISTORY:
+#   2021/04/13, SK Hushing III. Original issue for Fedora.
+########################################################################
+"; exit }
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = `basename $0`; chomp($script);
+
+#----[ Handle command line options ]----#
+my $nohdr = 0;
+my $nomasks = 0;
+my $nostats = 0;
+my $stg = "";
+my $v = 0;
+GetOptions (
+    "h" => \$nohdr,
+    "m" => \$nomasks,
+    "s" => \$nostats,
+    "v+"  => \$v,
+) or die "$script: Aborted.\n";
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
+#----[ Handle command line arguments ]----#
+if (scalar(@ARGV) < 1) {
+    # print STDERR "$script: * Argument(s) missing\n";
+    # usage();
+} else {
+    $stg = $ARGV[0];
+}
+
+#----[ Print some variables for understanding ]----#
+print "verbose: $v\n" if $v;
+print "stg:     $stg\n" if $stg ne "" && $v;
+
+#----[ Parse ifconfig for interfaces with IP assigned ]----#
+my %ip;
+my %nm;
+my %bc;
+my %drp;
+my %ovr;
+my %up;
+my $ifname = "";
+open(IFCONFIG, "-|", "ifconfig -a 2>/dev/null");
+while (my $line = <IFCONFIG>) {
+    chomp($line);
+    print ":: $line\n" if $v;
+    # my ($uid,$pid,$ppid,$c,$stime,$tty,$time,$cmd) = split(/ +/, $line);
+    # print "$line\n" if !$nohdr && $uid eq "UID";
+    # next if $string ne "" && $line !~ m/$string/i;
+    if ($line =~ /^([a-zA-Z0-9-]+):/) {
+	$ifname = $1;
+	$ip{$ifname} = "";
+	$nm{$ifname} = "";
+	$bc{$ifname} = "";
+	$drp{$ifname} = "";
+	$ovr{$ifname} = "";
+	$up{$ifname} = "";
+	print "-> IFN: $ifname\n" if $v>1;
+    }
+    if ($line =~ /\bUP\b/) {
+	$up{$ifname} = "Y";
+	print "-> UP: $up{$ifname}\n" if $v>1;
+    }
+    if ($line =~ / dropped ([0-9]+)/) {
+	if ($1 ne "0") {
+	    $drp{$ifname} = $1;
+	    print "-> DRP: $drp{$ifname}\n" if $v>1;
+	}
+    }
+    if ($line =~ / overruns ([0-9]+)/) {
+	if ($1 ne "0") {
+	    $ovr{$ifname} = $1;
+	    print "-> OVR: $ovr{$ifname}\n" if $v>1;
+	}
+    }
+    if ($line =~ / inet ([0-9.]+)/) {
+	$ip{$ifname} = $1;
+	print "-> IP: $ip{$ifname}\n" if $v>1;
+    }
+    if ($line =~ / netmask ([0-9.]+)/) {
+	$nm{$ifname} = $1;
+	print "-> NM: $nm{$ifname}\n" if $v>1;
+    }
+    if ($line =~ / broadcast ([0-9.]+)/) {
+	$bc{$ifname} = $1;
+	print "-> BC: $bc{$ifname}\n" if $v>1;
+    }
+}
+close(IFCONFIG);
+
+#----[ Print networks with IP addresses and UP ]----#
+my $nout = 0;
+foreach my $ifn (keys %ip) {
+    next if $ip{$ifn} eq "";
+    next if $up{$ifn} ne "Y";
+
+    #----[ Build the output line ]----#
+    my $out = sprintf "%-12s %-15s", $ifn, $ip{$ifn};
+    $out .= sprintf " %-15s %-15s", $nm{$ifn}, $bc{$ifn} if !$nomasks;
+    $out .= sprintf " %8s %8s", $drp{$ifn}, $ovr{$ifn} if !$nostats;
+    next if $stg ne "" && $out !~ /$stg/;
+    $nout++;
+
+    #----[ Print header line, if not suppressed ]----#
+    if ($nout == 1 &&!$nohdr) {
+	my $hdr = "[---Name---] [------IP-----]";
+	$hdr .= " [---Netmask---] [--Broadcast--]" if !$nomasks;
+	$hdr .= " [-Drop-] [-Ovrr-]" if !$nostats;
+	printf "$hdr\n";
+    }
+
+    print "$out\n";
+}

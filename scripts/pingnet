@@ -27,16 +27,12 @@ Getopt::Long::Configure("bundling");
 my $script = `basename $0`; chomp($script);
 
 #----[ Handle command line options ]----#
-my $string_option_a = "";
-my $integer_option_b = 0;
-my $switch_option_c = 0;
+my $all = 0;
 my $v = 0;
 GetOptions (
-    "a=s" => \$string_option_a,
-    "b=i" => \$integer_option_b,
-    "c" => \$switch_option_c,
+    "a" => \$all,
     "v+"  => \$v,
-) or die ("newscript: * Unsupported option\n");
+) or die ("pingnet: * Unsupported option\n");
 usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
 
 #----[ Body of script ]----#

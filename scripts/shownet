@@ -5,7 +5,7 @@ sub usage() { print STDERR
 #
 # PURPOSE: Show network interface ipv4 addresses, netmask, broadcast
 #
-# USAGE: shownet [-v][stg]
+# USAGE: shownet [-v] [stg]
 #
 # PARAMETERS: (replace this example with pertinent info)
 #   -v           Verbose mode

@@ -1,0 +1,25 @@
+#!/bin/sh
+#############################################################################
+# FILE: cvt
+#
+# PURPOSE: Convert UTI log in Apple clipboard, put results back on clipboard
+#
+# USAGE: Cooy UTI log text to clipboard, run cvt, paste results into Excel
+#
+# NOTES:
+#   Input data must be formatted like this:
+#   8/22:
+#   9:14 am 2 0 2 0
+#   1:40 pm 2 0 2 0 optional comment
+#   10:49 pm 2 0 2 0
+#
+#   Output data will be formatted like this:
+#   8/22/2026 9:14 am	2	0	2	0
+#   8/22/2026 1:40 pm	2	0	2	0	optional comment
+#   8/22/2026 10:49 pm	2	0	2	0
+#
+# MODIFICATION HISTORY: 
+#   2026/08/25 SK Hushing III. Original issue for a-shell.
+#   2026/09/03 SKH. Revised to use cvuti.
+#############################################################################
+pbpaste | cvuti | pbcopy

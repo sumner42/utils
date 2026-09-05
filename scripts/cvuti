@@ -1,0 +1,115 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+'########################################################################
+# FILE: cvuti
+#
+# PURPOSE: Convert raw UTI log entries for paste into Excel
+#
+# USAGE: cvuti [-v]
+#
+# ARGUMENTS:
+#   -v    Verbose mode (writes to STDERR)
+#   -vv   Very verbose mode (writes to STDERR)
+#
+# NOTES:
+#   Reads from stdin, writes to stdout.
+#
+# TYPICAL USAGE SCENARIO: 
+#     Copy new UTI calendar logs to OneNote, adding date lines
+#     Copy new additions from OneNote UTI log to clipboard
+#     Open a-shell app
+#     Run: pbpaste | cvuti | pbcopy
+#     Open UTI Log spreadsheet in Excel app
+#     Paste clipboard into next available line in Excel
+#
+# INPUT DATA FORMAT - must in groups like this:
+#   8/22:
+#   9:14 am 2 0 2 0
+#   1:40 pm 2 0 2 0 optional comment
+#   10:49 pm 2 0 2 0
+#
+# OUTPUT DATA FORMAT:
+#   8/22/2026 9:14 am	2	0	2	0
+#   8/22/2026 1:40 pm	2	0	2	0	optional comment
+#   8/22/2026 10:49 pm	2	0	2	0
+#
+# MODIFICATION HISTORY:
+#   2026/09/02, SK Hushing III. Original issue for a-shell.
+#   2026/09/04, SKH. Lots of i/o tweaks, then back to original filter.
+########################################################################
+'; exit }
+
+use strict;
+use warnings;
+use File::Basename;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+#----[ Initializations ]----#
+my $script = basename($0);
+my $year = (localtime)[5] + 1900;
+my $long_date = "M/D/YYYY";
+
+#----[ Handle command line options ]----#
+my $v = 0;
+GetOptions (
+    "v+"  => \$v,
+) or die "$script: Aborted.\n";
+
+#----[ Print usage if first argument is help ]----#
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
+# print STDERR "$script: Verbose mode\n" if $v == 1;
+# print STDERR "$script: Very verbose mode\n" if $v > 1;
+
+#----[ Process standard input stream ]----#
+my $nread = 0;
+my $nwrite = 0;
+
+while (my $line = <STDIN>) {
+    chomp($line);
+    $nread++;
+    next if $line =~ /^\s*$/;      # Skip blank lines
+    print STDERR "LINE: ($line)\n" if $v > 1;
+
+    #----[ Match date line 8/24: Strip trailing colon, append current year ]----#
+    if ($line =~ /^[0-9]+\/[0-9]+:$/) {
+        print STDERR "  DATE_LINE: ($line)\n" if $v > 1;
+        my $short_date = $line;
+        $short_date =~ s/:$//;
+        $long_date = "$short_date/$year";
+        print STDERR "    long_date: $long_date\n" if $v > 1;
+        next;
+
+    #----[ Match data lines starting with timestamp like 8:12 or 11:17 ]----#
+    } elsif ($line =~ /^[0-9]+:[0-9]+/) {
+        print STDERR "  DATA_LINE: ($line)\n" if $v > 1;
+
+        #----[ Split line into tokens ]----#
+        my @tokens = split(' ', $line);
+        my $nf = scalar(@tokens);
+        print STDERR "    n_tokens: ($nf)\n" if $v > 1;
+
+        #----[ Grab time + AM/PM ]----#
+        my $time_stamp = join(' ', @tokens[0..1]);
+
+        #----[ Grab the 4 data fields, joined by tabs ]----#
+        my $data_cols  = join("\t", @tokens[2..5]);
+
+        #----[ Build base output ]----#
+        my $out = "$long_date $time_stamp\t$data_cols";
+
+        #----[ Append comment if remaining tokens exist ]----#
+        if ($nf > 6) {
+            my $comment = join(' ', @tokens[6..$#tokens]);
+            $out .= "\t$comment";
+        }
+
+        print "$out\n";
+        $nwrite++;
+    } else {
+        print STDERR "  UNRECOGNIZED: ($line)\n" if $v > 1;
+    }
+}
+
+print STDERR "$script: read $nread, wrote $nwrite lines\n" if $v > 0;

@@ -1,0 +1,35 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+'########################################################################
+# FILE: dt
+#
+# PURPOSE: Print a series of month/day: lines to start a UTI log month
+#
+# USAGE: dt month days
+#
+# ARGUMENTS:
+#   month   Month number. Default is current month.
+#   days    Days in month. Default is days in current month.
+#
+# MODIFICATION HISTORY:
+#   2026/09/02, SK Hushing III. Original issue for a-shell.
+########################################################################
+'; exit; }
+
+use strict;
+use warnings;
+# use Time::Local;
+
+# Print usage if first argument is help
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
+# Use months and days passed or set defaults
+my $month = $ARGV[0] // 0;
+my $days = $ARGV[1] // 31;
+$month = ((localtime)[4] + 1) if ($month < 1 || $month > 12);
+$days = 31 if ($days < 1 || $days > 31);
+
+#----[ Print specified month/day lines ]----#
+for (my $day = 1; $day <= $days; $day++) {
+    print "$month/$day:\n\n";
+}

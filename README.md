@@ -1,3 +1,1 @@
-Long time developer retired from a proprietary corporate environment. 
-Been away from it for years, now starting to refresh my skills under
-Fedora and a-shell.
+Long time developer, lead, sysadmin, now retired, and looking to have a little fun. 

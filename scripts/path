@@ -3,41 +3,71 @@ sub usage() { print STDERR
 '########################################################################
 # FILE: path
 #
-# PURPOSE: List directories in PATH, one on each line
+# PURPOSE: List directories in PATH or CDPATH, one per line
 #
-# USAGE: path [c]
+# USAGE: path [-s][-v] [varname]
+#
+# OPTIONS:
+#   -s     Shorten the paths (Application/xxx/ becomes /App../)
+#   -v     Verbose mode. Print unmodified env variable first.
 # 
 # PARAMETERS:
-#   c     - List directories in CDPATH. Default is to list PATH.
+#   varname  - Variable name to list (PATH or CDPATH). Default is PATH.
+#
+# NOTES:
+#   Abbreviations are accepted (c for CDPATH)
 #
 # MODIFICATION HISTORY:
 #   2020/09/16, SK Hushing III. Original issue for Fedora.
+#   2026/09/06, SKH. Added -s option for a-shell super-long paths.
 ########################################################################
 '; exit }
 
 use strict;
 use warnings;
+use File::Basename;
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
 
-#----[ Misc initializations ]----#
-my $script = `basename $0`; chomp($script);
-my $var = "PATH";
+#----[ Get script name for error messages ]----#
+my $script = basename($0);
 
-#----[ Handle c or p command line argument ]----#
-usage() if scalar(@ARGV) && $ARGV[0] eq "help";
-if (scalar(@ARGV)) {
-    if ($ARGV[0] =~ "^[Cc]") {
-	$var = "CDPATH";
-    } elsif ($ARGV[0] =~ "^[Pp]") {
-	$var = "PATH";
-    } else {
-	die ("* $script - unrecognized argument $ARGV[0]\n");
-    }
+#----[ Handle command line options ]----#
+my $short = 0;
+my $v = 0;
+GetOptions (
+    "s"   => \$short,
+    "v+"  => \$v,
+) or die "$script: Aborted.\n";
+
+#----[ Print usage if requested ]----#
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
+#----[ Initializations ]----#
+my $width = $ENV{'COLUMNS'} // 56;
+my $varname = "PATH";
+my $arg = $ARGV[0] // 'p';
+
+#----[ Validate variable name command line argument ]----#
+if ($arg =~ /^[Cc][Dd]?[Pp]?[Aa]?[Tt]?[Hh]?$/) {
+    $varname = "CDPATH";
+} elsif ($arg =~ /^[Pp][Aa]?[Tt]?[Hh]?$/) {
+    $varname = "PATH";
+} else {
+    die "$script: unsupported variable name ($arg)\n";
 }
 
-#----[ Print components of specified path variable ]----#
-my @dirs = split(/:/,$ENV{$var});
-foreach my $dir (@dirs) {
-    print "$dir\n";
+#----[ Print elements of specified path variable ]----#
+my $path = $ENV{$varname} // "";
+if ($path) {
+    if ($v) {
+	print "-" x $width, "\n";
+	print "$path\n";
+	print "-" x $width, "\n";
+    }
+    my @parts = split(/:/,$path);
+    foreach my $part (@parts) {
+	$part =~ s/Application\/[0-9A-Fa-f-]+\//App..\// if $short;
+	print "$part\n";
+    }
 }

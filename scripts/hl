@@ -21,11 +21,12 @@ sub usage() { print STDERR
 
 use strict;
 use warnings;
+use File::Basename;
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
 
-#----[ Initializations ]----#
-my $script = `basename $0`; chomp($script);
+#----[ Get script name for error messages ]----#
+my $script = basename($0);
 
 #----[ Handle command line arguments ]----#
 my $c = "";

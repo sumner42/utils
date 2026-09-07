@@ -22,24 +22,24 @@ sub usage() { print STDERR
 
 use strict;
 use warnings;
+use File::Basename;
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
 
-#----[ Initializations ]----#
-my $script = `basename $0`; chomp($script);
+#----[ Get script name for error messages ]----#
+my $script = basename($0);
 
 #----[ Handle command line options ]----#
 my $c = 0;
 my $v = 0;
-my $w = 80;
+my $w = $ENV{'COLUMNS'} // 80;
 GetOptions (
     "c=s" => \$c,
     "w=i" => \$w,
     "v+"  => \$v,
 ) or die "$script: Aborted.\n";
 usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
-die("$script: No message specified. Aborted.\n") if scalar(@ARGV) < 1;
-my $message = $ARGV[0];
+my $message = join(' ', @ARGV) // "";
 
 #----[ Decode color string into a number ]----#
 my $cn = "0";
@@ -50,12 +50,12 @@ if ($c ne "") {
     elsif ($c =~ /^ye?l?l?o?w?$/) {$cn = 33}
     elsif ($c =~ /^bl?u?e?$/)     {$cn = 34}
     elsif ($c =~ /^pu?r?p?l?e?$/) {$cn = 35}
+    elsif ($c =~ /^vi?o?l?e?t?$/) {$cn = 35}
     elsif ($c =~ /^cy?a?n?$/)     {$cn = 36}
     elsif ($c =~ /^wh?i?t?e?$/)   {$cn = 37}
     elsif ($c >=30 && $c <= 37)   {$cn = $c}
     else                          {$cn = 0}
 }
-
 
 #----[ Build a string of dashes to fill the line before the message ]----#
 my $nchar = length($message);

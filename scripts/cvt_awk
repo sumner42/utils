@@ -1,5 +1,5 @@
 #!/bin/sh
-########################################################################
+#############################################################################
 # FILE: cvt
 #
 # PURPOSE: Convert UTI log in Apple clipboard, put results back on clipboard
@@ -20,6 +20,5 @@
 #
 # MODIFICATION HISTORY: 
 #   2026/08/25 SK Hushing III. Original issue for a-shell.
-#   2026/09/03 SKH. Revised to use cvuti.
-########################################################################
-pbpaste | cvuti | pbcopy
+#############################################################################
+pbpaste | awk -f ~/Documents/bin/convert.awk | pbcopy

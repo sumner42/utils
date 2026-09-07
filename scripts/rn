@@ -12,64 +12,70 @@ sub usage() { print STDERR
 #   new        The new string to replace the old string
 #   file_list  The list of files to rename.
 #   -v         Verbose mode
+#   -vv        Very verbose mode
 #   -x         Test mode. Do not execute any changes. Implies verbose.
 #
 # EXAMPLE: rn 'HEIC' 'heic' *.HEIC
 #
 # MODIFICATION HISTORY:
 #   2020/09/27, SK Hushing III. Original issue for Fedora.
+#   2026/09/02, SKH. Updated verbose options on a-shell.
 ########################################################################
 "; exit }
 
 use strict;
 use warnings;
+use File::Basename;
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
 
-#----[ Initializations ]----#
-my $script = `basename $0`; chomp($script);
+#----[ Get script name for error messages ]----#
+my $script = basename($0);
 
 #----[ Handle command line options ]----#
-my $nox = 0;
+my $no_exec = 0;
 my $v = 0;
 GetOptions (
-    "x"  => \$nox,
+    "x"  => \$no_exec,
     "v+"  => \$v,
 ) or die "$script: Aborted.\n";
-my $x = $nox ? 0 : 1;
-$v = 1 if !$v && $nox;
-print "$script: No changes will be made, due to -x option\n" if $nox;
-print "verbose: $v\n" if $v;
-print "exec: $x\n" if $v;
+my $yes_exec = $no_exec ? 0 : 1;
+$v = 1 if !$v && $no_exec;
+print "$script: No changes will be made, due to -x option\n" if $no_exec && $v > 1;
+print "verbose: $v\n" if $v > 1;
+print "exec: $yes_exec\n" if $v > 1;
 my $narg = scalar(@ARGV);
-print "narg: $narg\n" if $v;
-usage() if $narg > 0 && $ARGV[0] eq "help";
+print "narg: $narg\n" if $v > 1;
+
+#----[ Print usage if requested ]----#
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
 if ($narg < 3) {
     print STDERR "$script: * Argument(s) missing\n";
     usage();
 }
 my $old = $ARGV[0]; shift;
-print "old pattern: $old\n" if $v;
+print "old pattern: $old\n" if $v > 1;
 my $new = $ARGV[0]; shift;
-print "new pattern: $new\n" if $v;
+print "new pattern: $new\n" if $v > 1;
 my $nspec = scalar(@ARGV);
-print "nspec: $nspec\n" if $v;
+print "nspec: $nspec\n" if $v > 1;
 
 #----[ Process specified files ]----#
 for (my $i=0; $i<$nspec; $i++) {
-    print "fspec: $ARGV[$i]\n" if $v;
+    print "fspec: $ARGV[$i]\n" if $v > 1;
     my @files = glob $ARGV[$i];
     my $nfile = scalar(@files);
-    print "  nfile: $nfile\n" if $v;
+    print "  nfile: $nfile\n" if $v > 1;
     foreach my $file (@files) {
-	print "  file1: $file\n" if $v;
+	print "  file1: $file\n" if $v > 1;
 	next if $file !~ /$old/;
 	my $file2 = $file;
 	$file2 =~ s/$old/$new/;
-	print "  file2: $file2\n" if $v;
+	print "  file2: $file2\n" if $v > 1;
 	my $cmd = "mv $file $file2";
 	print "$cmd\n" if $v;
-	system($cmd) if $x;
+	system($cmd) if $yes_exec;
     }
 }
 

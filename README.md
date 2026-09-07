@@ -1,1 +1,1 @@
-Long time developer, lead, sysadmin, now retired, and looking to have a little fun. 
+Long time developer/lead/sysadmin now retired and looking to have a little fun. 

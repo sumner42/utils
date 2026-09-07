@@ -1,27 +1,25 @@
 #!/usr/bin/perl
-########################################################################
+sub usage() { print STDERR
+'########################################################################
 # FILE: lines
 #
 # PURPOSE: Print descending line numbers to show window height
 #
-# USAGE: lines [-n nlines]
+# USAGE: lines [nlines]
 #
 # OPTIONS:
-#   -n nlines   The number of line numbers to print. Default 60.
+#   nlines   The number of line numbers to print. Default LINES or 60.
 #
 # MODIFICATION HISTORY:
 #   2020/09/18, SK Hushing III. Original issue for Fedora.
+#   2026/09/04, SKH. Use LINES for default.
 ########################################################################
+'; exit }
 use strict;
 use warnings;
-use Getopt::Long;
-Getopt::Long::Configure("bundling");
 
 #----[ Handle command line arguments ]----#
-my $nlines = 60;
-GetOptions ("n=i" => \$nlines) or die ("Command line error\n");
-my $narg = @ARGV;
-$nlines = $ARGV[0] if $narg > 0;
+my $nlines = $ARGV[0] // $ENV{'LINES'} // 60;
 
 #----[ Print descending line numbers ]----#
 for (my $i = $nlines; $i > 0; $i--) {

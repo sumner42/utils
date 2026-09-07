@@ -9,21 +9,21 @@ sub usage() { print STDERR
 #
 # ARGUMENTS:
 #   month   Month number. Default is current month.
-#   days    Days in month. Default is days in current month.
+#   days    Days in month. Default is 31.
 #
 # MODIFICATION HISTORY:
 #   2026/09/02, SK Hushing III. Original issue for a-shell.
 ########################################################################
-'; exit; }
+'; exit }
 
 use strict;
 use warnings;
 # use Time::Local;
 
-# Print usage if first argument is help
+#----[ Print usage if requested ]----#
 usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
 
-# Use months and days passed or set defaults
+#----[ Use months and days passed or set defaults ]----#
 my $month = $ARGV[0] // 0;
 my $days = $ARGV[1] // 31;
 $month = ((localtime)[4] + 1) if ($month < 1 || $month > 12);

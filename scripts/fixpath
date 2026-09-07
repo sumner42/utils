@@ -1,0 +1,28 @@
+#!/usr/bin/env perl
+########################################################################
+# FILE: fixpath
+# PURPOSE: add personal bin directory to PATH
+# USAGE: export PATH=`fixpath`
+########################################################################
+use strict;
+use warnings;
+
+my $home = $ENV{HOME} // '';
+my $bin  = "$home/bin";
+
+#----[ Split current PATH into an array ]----#
+my @dirs = split /:/, ($ENV{PATH} // '');
+
+#----[ Build a deduplicated list, keeping order and appending bin if missing ]----#
+my %seen;
+my @clean_path = grep { $_ ne '' && !$seen{$_}++ } (@dirs, $bin);
+
+#----[ DEBUG: Print new list, one directory per line for debug ]----#
+if ($ARGV[0] // "" eq "debug" ) {
+    print "----------------------------------------------------------------------\n";
+    print join("\n", @clean_path), "\n";
+    print "----------------------------------------------------------------------\n";
+}
+
+#----[ Output the result as a single colon-separated line ]----#
+print join(':', @clean_path);

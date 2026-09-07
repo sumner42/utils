@@ -1,0 +1,96 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+'########################################################################
+# FILE: usage
+#
+# PURPOSE: extract usage information from named script in PATH
+#
+# USAGE: usage <script>
+#
+# MODIFICATION HISTORY:
+#  2026/08/30, SK Hushing III, with Gemini AI guidance. 
+#  2026/09/06, SKH. Handle comment banner with leading apostrophe. 
+########################################################################
+'; exit }
+use strict;
+use warnings;
+use File::Basename;
+
+#----[ Get script name for error messages ]----#
+my $script = basename($0);
+usage() if scalar(@ARGV) && $ARGV[0] eq "help";
+
+my $target = $ARGV[0] or usage();
+
+#----[ 1. Resolve target script location in current directory or PATH ]----#
+my $file_path;
+if (-f $target && -x _) {
+    $file_path = $target;
+} else {
+    for my $dir (split /:/, $ENV{'PATH'} // "") {
+        my $p = "$dir/$target";
+        if (-f $p && -x _) {
+            $file_path = $p;
+            last;
+        }
+    }
+}
+
+# print "DEBUG: file_path is $file_path\n";
+
+die "usage: command '$target' not found or not executable\n" unless $file_path;
+
+#----[ 2. Extract and format the header content ]----#
+open(my $fh, '<', $file_path) or die "usage: cannot open '$file_path': $!\n";
+
+my $in_header = 0;
+my $is_sub_usage = 0;
+my @output;
+
+while (my $line = <$fh>) {
+    #----[ 1. Trigger on 'sub usage' definition ]----#
+    if (!$in_header && $line =~ /sub\s+usage/i) {
+        $in_header = 1;
+        $is_sub_usage = 1;
+        next;
+    }
+
+    #----[ 2. Trigger on top '#####...' boundary (or catch opening boundary inside sub usage) ]----#
+    $line =~ s/'###/###/; # strip leading apostrophe off comment banner
+    if ($line =~ /^#{5,}/) {
+        if (!$in_header) {
+            $in_header = 1;
+            next; # Skip opening boundary line
+        } else {
+            # If we're already capturing and hit another #####... bar:
+            # - For shell scripts, this is the closing boundary -> STOP.
+            # - For sub usage, if we already captured text, it's the closing bar -> STOP.
+            if (@output) {
+                last;
+            } else {
+                #----[ Skip the opening bar right inside sub usage ]----#
+                next;
+            }
+        }
+    }
+
+    #----[ 3. Capture and clean lines while inside the block ]----#
+    if ($in_header) {
+        if ($is_sub_usage) {
+            # Stop if we hit the end of the string block / function
+            last if $line =~ /^['"];/ || $line =~ /^\s*;\s*exit/ || $line =~ /^\s*\}/;
+        }
+
+        #----[ Strip leading '# ' or '#' while preserving inner text spacing ]----#
+        $line =~ s/^# ?//;
+        push @output, $line;
+    }
+}
+close($fh);
+
+#----[ Fallback error if no usage block was recognized ]----#
+if (!@output) {
+    die "usage: no formatted header or usage() block found in '$target'\n";
+}
+
+print @output;

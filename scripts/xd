@@ -36,16 +36,18 @@ sub usage() { print STDERR
 #
 # MODIFICATION HISTORY:
 #   2020/09/27, SK Hushing III. Original issue for Fedora.
+#   2026/09/06, SKH. Use File::Basename.
 ########################################################################
 "; exit }
 
 use strict;
 use warnings;
+use File::Basename;
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
 
-#----[ Initializations ]----#
-my $script = `basename $0`; chomp($script);
+#----[ Get script name for error messages ]----#
+my $script = basename($0);
 
 #----[ Handle command line options ]----#
 my $grpSiz = 16;

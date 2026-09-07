@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 sub usage() { print STDERR
-qq(########################################################################
+'########################################################################
 # FILE: iter
 #
 # PURPOSE: Print an iteration of numbers
@@ -28,15 +28,16 @@ qq(########################################################################
 # MODIFICATION HISTORY:
 #   2020/10/16, SK Hushing III. Original issue for Fedora.
 ########################################################################
-); exit }
+'; exit }
 
 use strict;
 use warnings;
+use File::Basename;
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
 
-#----[ Initializations ]----#
-my $script = `basename $0`; chomp($script);
+#----[ Get script name for error messages ]----#
+my $script = basename($0);
 
 #----[ Handle command line options ]----#
 my $first = 1;
@@ -70,20 +71,19 @@ if ($narg < 1) {
 }
 
 #----[ Print some variables for understanding ]----#
-print "first: $first\n" if $v;
-print "last: $last\n" if $v;
-print "incr: $incr\n" if $v;
-print "verbose: $v\n" if $v;
+print STDERR "first: $first\n" if $v;
+print STDERR "last: $last\n" if $v;
+print STDERR "incr: $incr\n" if $v;
+print STDERR "verbose: $v\n" if $v;
 
 #----[ Body of script ]----#
 die ("Invalid increment $incr\n") if scalar($incr) == 0;
+$incr = abs($incr);
 if ($first <= $last) {
-    $incr = -$incr if $incr < 0;
     for (my $i=$first; $i<=$last; $i+=$incr) { 
         print "$i"; print " " if $i ne $last;
     }
 } else {
-    $incr = -$incr if $incr < 0;
     for (my $i=$first; $i>=$last; $i-=$incr) {
         print "$i"; print " " if $i ne $last;
     }

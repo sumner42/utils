@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+'########################################################################
+# FILE: mk_comment
+#
+# PURPOSE: Create comment block template with TBDs to complete.
+#
+# USAGE: mk_comment [help]
+#
+# NOTES: In vim run !!mk_comment on a blank line.
+#
+# MODIFICATION HISTORY:
+#   2026/09/06, SK Hushing III. Original issue.
+########################################################################
+'; exit }
+
+use strict;
+use warnings;
+
+#----[ Print usage if requested ]----#
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
+#----[ Create date string ]----#
+my $day = (localtime)[3];
+my $month = (localtime)[4] + 1;
+my $year = (localtime)[5] + 1900;
+my $today = sprintf("%04d/%02d/%02d", $year, $month, $day);
+
+print
+"########################################################################
+# FILE: TBD_filename
+#
+# PURPOSE: TBD_purpose
+#
+# USAGE: TBD_usage
+#
+# NOTES: TBD_notes
+#
+# MODIFICATION HISTORY:
+#   $today, TBD_author. Original issue.
+########################################################################
+";

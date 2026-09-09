@@ -1,0 +1,159 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+"########################################################################
+# FILE: check
+#
+# PURPOSE: Check for script differences between src and bin
+#
+# USAGE: check [-b bindir] [-s srcdir] [-v] [help]
+#
+# ARGUMENTS:
+#   -b bindir  Target (bin) directory to be compared.
+#   -s srcdir  Source (src) directory to be compared.
+#   -v         Verboase mode. -vv for very verbose mode.
+#
+# NOTES:
+#   Run from parent dir of src and bin.
+#   Default src dir is ./src/scripts or ./src
+#   Default bin dir is ./pad/bin or ../pho/bin or ./bin
+#
+# MODIFICATION HISTORY:
+#   2026/09/06, SK Hushing III. Original issue.
+#   2026/09/07, SKH. Check mtimes. 
+#   2026/09/08, SKH. New sub checks md5 and mtime. 
+#   2026/09/08, SKH. Set left column width for longest filename.
+#   2026/09/08, SKH. Added some platfbrm independence.
+#   2026/09/08, SKH. Added -s and -b options.
+########################################################################
+"; exit }
+
+use strict;
+use warnings;
+use File::Basename;
+use File::Spec;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+use Digest::MD5;
+use POSIX ();
+
+#----[ Declare helper function ]----#
+sub check_dir;
+
+#----[ Handle command line options ]----#
+my $script = basename($0);
+my $srcdir = "";
+my $bindir = "";
+my $v = 0;
+GetOptions (
+    "b=s" => \$bindir,
+    "s=s" => \$srcdir,
+    "v+"  => \$v,
+) or die "$script: Aborted.\n";
+
+#----[ Get local environment info ]----#
+# my $osn = $^O;
+# if ($osn eq "Darwin") {}
+# my ($sysname, $nodename, $release, $version, $machine) = POSIX::uname();
+# print "ENV: osn:$osn sys:$sysname h/w:$machine\n" if $v > 1;
+
+#----[ Set src directory name if not explicitly specified ]----#
+if ("$srcdir") {
+    die "$script: src dir $srcdir not accessible\n" if ! -d $srcdir;
+} elsif (-d "src/scripts") {
+    $srcdir = "src/scripts";
+} elsif (-d "src") {
+    $srcdir = "src";
+} else {
+    die "$script: Can't determine src directory\n";
+}
+
+#----[ Set bin directory name if not explicitly specified ]----#
+if ("$bindir") {
+    die "$script: bin dir $bindir not accessible\n" if ! -d $bindir;
+} elsif (-e "pad/bin") {
+    $bindir = "pad/bin";
+} elsif (-e "pho/bin") {
+    $bindir = "pho/bin";
+} elsif (-d "bin") {
+    $bindir = "bin";
+} else {
+    die "$script: Can't determine bin directory\n";
+}
+print STDERR "Comparing $srcdir and $bindir\n" if $v > 1;
+
+#----[ Print usage if requested ]----#
+usage() if @ARGV && $ARGV[0] eq "help";
+
+#----[ Collect info for src and bin dirs ]----#
+my %src_info = check_dir($srcdir);
+my %bin_info = check_dir($bindir);
+
+#----[ Compare src and bin file hashes ]----#
+my %stats;
+my $maxlen = 10;
+my $same = "Same";
+foreach my $filename (keys %src_info) {
+    my $namelen = length($filename);
+    $maxlen = $namelen if $namelen > $maxlen;
+    if (!$bin_info{$filename}) {
+        $stats{$filename} = "Only in src";
+    } elsif ($bin_info{$filename}{sum} eq $src_info{$filename}{sum}) {
+        $stats{$filename} = $same;
+    } else {
+        $stats{$filename} = "Different";
+        if ($src_info{$filename}{mtime} > $bin_info{$filename}{mtime}) {
+            $stats{$filename} .= " (src is newer)";
+        } elsif ($src_info{$filename}{mtime} < $bin_info{$filename}{mtime}) {
+            $stats{$filename} .= " (bin is newer)";
+        } else {
+            $stats{$filename} .= " (same mtime)";
+        }
+    }
+}
+
+#----[ Check for files only in bin ]----#
+foreach my $filename (keys %bin_info) {
+    next if $stats{$filename};
+    my $namelen = length($filename);
+    $maxlen = $namelen if $namelen > $maxlen;
+    if (!$src_info{$filename}) {
+	$stats{$filename} = "Only in bin";
+    }
+}
+
+#----[ Print comparison status of all files ]----#
+my $fmt = "%${maxlen}s -- %s\n";
+foreach my $filename (sort keys %stats) {
+    next if $stats{$filename} eq $same && !$v;
+    printf $fmt, $filename, $stats{$filename};
+}
+########################################################################
+# END check main body
+########################################################################
+
+########################################################################
+# Return md5 hash and mtime for all files in dir
+########################################################################
+sub check_dir {
+    my ($dir) = @_;
+    my %info;
+
+    opendir(my $dh, $dir) or die "Cannot open directory $dir: $!\n";
+    while (my $file = readdir($dh)) {
+        next if $file =~ /^\.\.?$/;
+        my $path = File::Spec->catfile($dir, $file);
+        next unless -f $path;
+
+        open(my $fh, '<', $path) or die "Cannot read $path: $!\n";
+        binmode($fh);
+
+        $info{$file} = {
+            mtime => (stat($path))[9],
+            sum   => Digest::MD5->new->addfile($fh)->hexdigest,
+        };
+        close($fh);
+    }
+    closedir($dh);
+
+    return %info;
+}

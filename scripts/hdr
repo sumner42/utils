@@ -24,7 +24,6 @@ use strict;
 use warnings;
 use File::Basename;
 use Getopt::Long;
-Getopt::Long::Configure("bundling");
 
 #----[ Get script name for error messages ]----#
 my $script = basename($0);
@@ -33,6 +32,7 @@ my $script = basename($0);
 my $c = 0;
 my $v = 0;
 my $w = $ENV{'COLUMNS'} // 80;
+Getopt::Long::Configure("bundling");
 GetOptions (
     "c=s" => \$c,
     "w=i" => \$w,

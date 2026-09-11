@@ -27,7 +27,6 @@ use strict;
 use warnings;
 use File::Basename;
 use Getopt::Long;
-Getopt::Long::Configure("bundling");
 
 #----[ Get script name for error messages ]----#
 my $script = basename($0);
@@ -35,6 +34,7 @@ my $script = basename($0);
 #----[ Handle command line options ]----#
 my $short = 0;
 my $v = 0;
+Getopt::Long::Configure("bundling");
 GetOptions (
     "s"   => \$short,
     "v+"  => \$v,

@@ -5,25 +5,40 @@ sub usage() { print STDERR
 #
 # PURPOSE: Check for script differences between src and bin
 #
-# USAGE: check [-b bindir] [-s srcdir] [-v] [help]
+# USAGE: check [-v] [-s srcdir] [-b bindir] [srcdir bindir] [help]
 #
 # ARGUMENTS:
-#   -b bindir  Target (bin) directory to be compared.
+#   srcdir     Source (src) directory to be compared.
+#   bindir     Target (bin) directory to be compared.
+#
+# OPTIONS:
 #   -s srcdir  Source (src) directory to be compared.
+#   -b bindir  Target (bin) directory to be compared.
 #   -v         Verboase mode. -vv for very verbose mode.
 #
 # NOTES:
-#   Run from parent dir of src and bin.
+#   Specify source and target as args or options, not both. 
+#   Run from parent dir of src and pad/bin.
 #   Default src dir is ./src/scripts or ./src
 #   Default bin dir is ./pad/bin or ../pho/bin or ./bin
 #
+# EXAMPLES:
+#   check
+#   check -v
+#   check -s srcdir -b bindir
+#   check -s srcdir
+#   check -b bindir
+#   check bindir
+#   check srcdir bindir
+#
 # MODIFICATION HISTORY:
-#   2026/09/06, SK Hushing III. Original issue.
-#   2026/09/07, SKH. Check mtimes. 
-#   2026/09/08, SKH. New sub checks md5 and mtime. 
-#   2026/09/08, SKH. Set left column width for longest filename.
+#   2026/09/06, SK Hushing III. Original issue for a-shell.
+#   2026/09/07, SKH. Use mtimes to report newer/older. 
+#   2026/09/08, SKH. New sub to check md5 and mtime. 
+#   2026/09/08, SKH. Size left column width for longest filename.
 #   2026/09/08, SKH. Added some platfbrm independence.
 #   2026/09/08, SKH. Added -s and -b options.
+#   2026/09/09, SKH. Report changes using specified dir names.
 ########################################################################
 "; exit }
 
@@ -32,7 +47,6 @@ use warnings;
 use File::Basename;
 use File::Spec;
 use Getopt::Long;
-Getopt::Long::Configure("bundling");
 use Digest::MD5;
 use POSIX ();
 
@@ -44,21 +58,51 @@ my $script = basename($0);
 my $srcdir = "";
 my $bindir = "";
 my $v = 0;
+Getopt::Long::Configure("bundling");
 GetOptions (
     "b=s" => \$bindir,
     "s=s" => \$srcdir,
     "v+"  => \$v,
 ) or die "$script: Aborted.\n";
 
-#----[ Get local environment info ]----#
+#----[ Print usage if requested ]----#
+usage() if @ARGV && $ARGV[0] eq "help";
+
+#----[ Get local environment info to help set default directories ]----#
 # my $osn = $^O;
 # if ($osn eq "Darwin") {}
 # my ($sysname, $nodename, $release, $version, $machine) = POSIX::uname();
 # print "ENV: osn:$osn sys:$sysname h/w:$machine\n" if $v > 1;
 
-#----[ Set src directory name if not explicitly specified ]----#
+#----[ Handle two dirs as args if not already specified ]----#
+# print STDERR "$script N ARGS: $#ARGV\n" if $v > 1;
+if ($#ARGV >= 0) {
+    # print STDERR "$ARGV[0] $ARGV[1]\n" if $v > 1;
+    if ($#ARGV == 0) {
+	if ($bindir && $ARGV[0] ne $bindir) {
+	    die "$script: Conflicting target dir spec ($ARGV[0], $bindir)\n";
+	}
+	$bindir = $ARGV[0];
+	# print STDERR "$script: One argument: target is $bindir\n" if $v > 1;
+    } elsif ($#ARGV == 1) {
+	if ($srcdir && $bindir && ($ARGV[0] ne $srcdir || $ARGV[1] ne $bindir)) {
+	    die "$script: Source (-s $srcdir) & Target (-b $bindir) already specified\n";
+	} elsif ($srcdir && $ARGV[0] ne $srcdir) {
+	    die "$script: Conflicting source dir spec ($ARGV[0], -s $srcdir)\n";
+	} elsif ($bindir && $ARGV[1] ne $bindir) {
+	    die "$script: Conflicting target dir spec ($ARGV[1], -b $bindir)\n";
+	}
+	$srcdir = $ARGV[0];
+	$bindir = $ARGV[1];
+	# print "$script: Two arguments: source $srcdir, target $bindir\n" if $v > 1;
+    } else {
+	die "$script: Too many arguments. See $script help.\n";
+    }
+}
+
+#----[ Set default src directory name if not explicitly specified ]----#
 if ("$srcdir") {
-    die "$script: src dir $srcdir not accessible\n" if ! -d $srcdir;
+    die "$script: src dir $srcdir not accessible\n" if ! -e $srcdir;
 } elsif (-d "src/scripts") {
     $srcdir = "src/scripts";
 } elsif (-d "src") {
@@ -67,7 +111,7 @@ if ("$srcdir") {
     die "$script: Can't determine src directory\n";
 }
 
-#----[ Set bin directory name if not explicitly specified ]----#
+#----[ Set default bin directory name if not explicitly specified ]----#
 if ("$bindir") {
     die "$script: bin dir $bindir not accessible\n" if ! -d $bindir;
 } elsif (-e "pad/bin") {
@@ -79,12 +123,9 @@ if ("$bindir") {
 } else {
     die "$script: Can't determine bin directory\n";
 }
-print STDERR "Comparing $srcdir and $bindir\n" if $v > 1;
-
-#----[ Print usage if requested ]----#
-usage() if @ARGV && $ARGV[0] eq "help";
 
 #----[ Collect info for src and bin dirs ]----#
+print STDERR "Comparing $srcdir and $bindir\n" if $v > 1;
 my %src_info = check_dir($srcdir);
 my %bin_info = check_dir($bindir);
 
@@ -96,15 +137,15 @@ foreach my $filename (keys %src_info) {
     my $namelen = length($filename);
     $maxlen = $namelen if $namelen > $maxlen;
     if (!$bin_info{$filename}) {
-        $stats{$filename} = "Only in src";
+        $stats{$filename} = "Only in $srcdir";
     } elsif ($bin_info{$filename}{sum} eq $src_info{$filename}{sum}) {
         $stats{$filename} = $same;
     } else {
         $stats{$filename} = "Different";
         if ($src_info{$filename}{mtime} > $bin_info{$filename}{mtime}) {
-            $stats{$filename} .= " (src is newer)";
+            $stats{$filename} .= " ($srcdir is newer)";
         } elsif ($src_info{$filename}{mtime} < $bin_info{$filename}{mtime}) {
-            $stats{$filename} .= " (bin is newer)";
+            $stats{$filename} .= " ($bindir is newer)";
         } else {
             $stats{$filename} .= " (same mtime)";
         }
@@ -117,7 +158,7 @@ foreach my $filename (keys %bin_info) {
     my $namelen = length($filename);
     $maxlen = $namelen if $namelen > $maxlen;
     if (!$src_info{$filename}) {
-	$stats{$filename} = "Only in bin";
+	$stats{$filename} = "Only in $bindir";
     }
 }
 

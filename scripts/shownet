@@ -33,7 +33,6 @@ use strict;
 use warnings;
 use File::Basename;
 use Getopt::Long;
-Getopt::Long::Configure("bundling");
 
 #----[ Get script name for error messages ]----#
 my $script = basename($0);
@@ -44,6 +43,7 @@ my $nomasks = 0;
 my $nostats = 0;
 my $stg = "";
 my $v = 0;
+Getopt::Long::Configure("bundling");
 GetOptions (
     "h" => \$nohdr,
     "m" => \$nomasks,

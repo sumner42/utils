@@ -43,7 +43,6 @@ use strict;
 use warnings;
 use File::Basename;
 use Getopt::Long;
-Getopt::Long::Configure("bundling");
 
 #----[ Initializations ]----#
 my $script = basename($0);
@@ -52,6 +51,7 @@ my $long_date = "M/D/YYYY";
 
 #----[ Handle command line options ]----#
 my $v = 0;
+Getopt::Long::Configure("bundling");
 GetOptions (
     "v+"  => \$v,
 ) or die "$script: Aborted.\n";

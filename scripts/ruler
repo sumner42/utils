@@ -5,7 +5,7 @@ sub usage() { print STDERR
 #
 # PURPOSE: Print a 2-line horizontal character ruler
 #
-# USAGE: ruler [width]
+# USAGE: ruler [width] | [help]
 #
 # ARGUMENTS:
 #   width   Width of ruler in characters. Default is COLUMNS or 80.
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use File::Basename;
 
-# Print usage if first argument is help
+#----[ Print usage if requested ]----#
 usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
 
 #----[ Initializations ]----#

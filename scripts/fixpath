@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl
 ########################################################################
 # FILE: fixpath
 # PURPOSE: add personal bin directory to PATH

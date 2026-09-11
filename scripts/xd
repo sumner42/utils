@@ -44,7 +44,6 @@ use strict;
 use warnings;
 use File::Basename;
 use Getopt::Long;
-Getopt::Long::Configure("bundling");
 
 #----[ Get script name for error messages ]----#
 my $script = basename($0);
@@ -60,6 +59,7 @@ my $z_none = 0;
 my $offset = "";
 my $z_all = 0;
 my $v = 0;
+Getopt::Long::Configure("bundling");
 GetOptions (
     "a" => \$noAsc,
     "h" => \$noHdr,

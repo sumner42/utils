@@ -7,7 +7,9 @@ sub usage() { print STDERR
 #
 # USAGE: mk_comment [help]
 #
-# NOTES: In vim run !!mk_comment on a blank line.
+# NOTES:
+#   In vim run !!mk_comment on a blank line.
+#   Replace TBD_keyword with pertinent information.
 #
 # MODIFICATION HISTORY:
 #   2026/09/06, SK Hushing III. Original issue.
@@ -21,6 +23,7 @@ use warnings;
 usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
 
 #----[ Create date string ]----#
+my $osn = $^O;
 my $day = (localtime)[3];
 my $month = (localtime)[4] + 1;
 my $year = (localtime)[5] + 1900;
@@ -34,9 +37,15 @@ print
 #
 # USAGE: TBD_usage
 #
+# OPTIONS: TBD_options
+#
+# ARGUMENTS: TBD_arguments
+#
 # NOTES: TBD_notes
 #
+# EXAMPLES: TBD_examples
+#
 # MODIFICATION HISTORY:
-#   $today, TBD_author. Original issue.
+#   $today, TBD_author. Original issue for $osn OS.
 ########################################################################
 ";

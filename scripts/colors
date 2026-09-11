@@ -19,13 +19,13 @@ sub usage() { print STDERR
 use strict;
 use warnings;
 use Getopt::Long;
-Getopt::Long::Configure("bundling");
 
 #----[ Initializations ]----#
 my $script = `basename $0`; chomp($script);
 
 #----[ Handle command line options ]----#
 my $v = 0;
+Getopt::Long::Configure("bundling");
 GetOptions (
     "v+"  => \$v,
 ) or die ("$script: * Unsupported option\n");

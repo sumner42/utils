@@ -5,11 +5,11 @@ sub usage() { print STDERR
 #
 # PURPOSE: Create a new perl or bash script file with boilerplate
 #
-# USAGE: newscript [-l lang][-p purpose][-u parms] name
+# USAGE: newscript [-a author][-l lang][-p purpose][-u parms] name
 #
 # PARAMETERS:
-#   -f          Force writing over existing file. Default is to quit.
-#   -l lang     Script language (perl or bash). Default is perl.
+#   -f          Enable overwriting existing file. Default is to quit.
+#   -l lang     Script language (perl or bash). Default based on name.
 #   -p purpose  Text for Purpose line describing why the script exists.
 #   -u parms    Text for Usage line describing how to run the script.
 #   -v          Verbose mode.
@@ -32,7 +32,6 @@ sub usage() { print STDERR
 use strict;
 use warnings;
 use Getopt::Long;
-Getopt::Long::Configure("bundling");
 
 #----[ Misc initializations ]----#
 my $script = `basename $0`; chomp($script);
@@ -40,12 +39,15 @@ my $date = `date "+%Y/%m/%d"`; chomp($date);
 
 #----[ Handle command line options ]----#
 my $force = 0;
-my $lang = "perl";
-my $purpose = "Do something cool";
-my $parms = "-a string -b integer -c arg1";
-my $sname = "NewScript.pl";
+my $author = "SK Hushing III";
+my $lang = "undefined";
+my $purpose = "TBD_Purpose";
+my $parms = "TBD -a string -b integer -c arg1";
+my $sname = "TBD_NewScript";
 my $v = 0;
+Getopt::Long::Configure("bundling");
 GetOptions (
+    "a=s" => \$author,
     "f"   => \$force,
     "l=s" => \$lang,
     "p=s" => \$purpose,
@@ -57,20 +59,21 @@ usage() if scalar(@ARGV) && $ARGV[0] eq "help";
 #----[ Handle command line arguments ]----#
 die "$script: * No script name provided\n" if scalar(@ARGV) < 1;
 $sname = $ARGV[0];
-my $sfile = $sname;
-if (-e $sfile) {
+my $fname = $sname;
+if (-e $fname) {
     if ($force) {
-	print STDERR "File $sfile exists, continuing with -f option.\n" if $v;
+	print STDERR "File $fname exists, continuing with -f option.\n" if $v;
     } else {
-	print STDERR "File $sfile exists. Aborted.\n";
+	print STDERR "File $fname exists. Aborted.\n";
     }
 }
 
-#----[ Create the new perl script ]----#
-if ($lang eq "perl" || $lang eq "p") {
-    newperl($sname,$sfile,$v);
-} elsif ($lang eq "bash" || $lang eq "b") {
-    newbash($sname,$sfile,$v);
+#----[ Create the perl or bash script ]----#
+print STDERR "Lang is $lang\n" if $v;
+if ($fname =~ /\.pl$/ || $lang eq "perl" || $lang eq "p") {
+    newperl($sname,$fname,$v);
+} elsif ($fname =~ /\.bash$/ || $fname =~ /\.sh$/ || $lang eq "bash" || $lang eq "b") {
+    newbash($sname,$fname,$v);
 } else {
     die "$script: * Unsupported language ($lang)\n";
 }
@@ -91,7 +94,7 @@ sub usage() { print STDERR
 #
 # USAGE: $perl_name $parms
 #
-# PARAMETERS: (replace this example with pertinent info)
+# PARAMETERS: TBD (replace this example with pertinent info)
 #   -a option_a  Explain how the -a option_a string works here
 #   -b option_b  Explain how -b option_b integer works here
 #   -c           Explain how the -c switch works here
@@ -101,14 +104,13 @@ sub usage() { print STDERR
 # EXAMPLE: $perl_name -v -a hello -b 23 -c testing
 #
 # MODIFICATION HISTORY:
-#   $date, SK Hushing III. Original issue for Fedora.
+#   $date, $author. Original issue for Fedora.
 ########################################################################
 "; exit }
 
 use strict;
 use warnings;
 use Getopt::Long;
-Getopt::Long::Configure("bundling");
 
 #----[ Initializations ]----#
 my \$script = \`basename \$0\`; chomp(\$script);
@@ -119,6 +121,7 @@ my \$integer_option_b = 0;
 my \$switch_option_c = 0;
 my \$arg1 = "";
 my \$v = 0;
+Getopt::Long::Configure("bundling");
 GetOptions (
     "a=s" => \\\$string_option_a,
     "b=i" => \\\$integer_option_b,
@@ -174,7 +177,7 @@ usage() { echo "\\
 # EXAMPLE: $bash_name -v -a hello -b 23 -c testing
 #
 # MODIFICATION HISTORY:
-#   $date, SK Hushing III. Original issue for Fedora.
+#   $date, $author. Original issue for Fedora.
 ########################################################################" >&2
 exit; }
 

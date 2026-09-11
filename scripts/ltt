@@ -1,2 +1,14 @@
-#!/bin/bash
-ls -lFtr --color=auto $@ | tail
+#!/bin/sh
+########################################################################
+# FILE: ltt
+#
+# PURPOSE: List 10 most recent files in directory
+#
+# USAGE: ltt [directory]
+#
+# MODIFICATION HISTORY:
+#   2020/10/18, SK Hushing III. Original issue for Fedora.
+#   2026/09/08, SKH. Updated for a-shell. Hide user/group, carry args in a var.
+########################################################################
+args="$@"
+ls -lFgotr --color=auto $args | tail

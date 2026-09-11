@@ -3,13 +3,13 @@ sub usage() { print STDERR
 "########################################################################
 # FILE: rn
 #
-# PURPOSE: Rename multiple files
+# PURPOSE: Rename multiple files using pattern
 #
 # USAGE: rn [-v] old new file_list
 #
 # PARAMETERS:
-#   old        The string to replace in each filename
-#   new        The new string to replace the old string
+#   old        The pattern to find and replace in each filename
+#   new        The replacement string
 #   file_list  The list of files to rename.
 #   -v         Verbose mode
 #   -vv        Very verbose mode
@@ -27,7 +27,6 @@ use strict;
 use warnings;
 use File::Basename;
 use Getopt::Long;
-Getopt::Long::Configure("bundling");
 
 #----[ Get script name for error messages ]----#
 my $script = basename($0);
@@ -35,6 +34,7 @@ my $script = basename($0);
 #----[ Handle command line options ]----#
 my $no_exec = 0;
 my $v = 0;
+Getopt::Long::Configure("bundling");
 GetOptions (
     "x"  => \$no_exec,
     "v+"  => \$v,

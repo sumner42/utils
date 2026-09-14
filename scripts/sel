@@ -1,3 +1,110 @@
+#!/usr/bin/perl
+sub usage() { print STDERR
+"########################################################################
 # FILE: sel
-# PURPOSE: print a list of files that contain a string
-# USAGE: sel [-r] 'string' files
+# 
+# UNDER CONSTRUCTION!
+#
+# PURPOSE: Select/list all files that contain a specified string pattern
+#
+# USAGE: sel [-i] stg [files]
+#
+# PARAMETERS: TBD (replace this example with pertinent info)
+#   -i           Ignore case in search string.
+#   -v           Verbose mode (print high level diagnostics)
+#   -vv          Very verbose mode (print per-file diagnostics)
+#   stg          Search string pattern to find.
+#   files        Files to examine. Default is all files in this directory.
+#
+# NOTES:
+#   Prints a list of filenames that have contents matching stg. 
+#   Assumes all files contain only text (scripts and text files). 
+#   I created this years ago, am trying to recreate from memory.
+#   For performing operations on files with certain contents.
+#
+# EXAMPLE: sel -v -a hello -b 23 -i basename *.pl
+#
+# MODIFICATION HISTORY:
+#   2026/09/12, SK Hushing III. Original issue for Fedora.
+########################################################################
+"; exit }
+
+use strict;
+use warnings;
+use File::Basename;
+use Getopt::Long;
+
+#----[ Initializations ]----#
+my $script = basename($0);
+
+#----[ Handle command line options ]----#
+my $ignore_case = 0;
+my $arg1 = "";
+my $v = 0;
+Getopt::Long::Configure("bundling");
+GetOptions (
+    "i" => \$ignore_case,
+    "v+"  => \$v,
+) or die "$script: Aborted.\n";
+usage() if scalar(@ARGV) > 0 && $ARGV[0] eq "help";
+
+#----[ Get search string from first argument ]----#
+if (scalar(@ARGV) < 1) {
+    print STDERR "$script: * No argument(s)\n";
+    usage();
+}
+my $stg = $ARGV[0];
+
+#----[ Build search pattern based on ignore_case option ]----#
+my $pattern = $ignore_case ? qr/\Q${stg}\E/i : qr/\Q${stg}\E/;
+
+#----[ Use files specified or list current directory ]----#
+my @files;
+if (scalar(@ARGV) >= 2) {
+    @files = @ARGV[1..$#ARGV];
+} else {
+    @files = glob('*');
+}
+
+#----[ Print some variables for understanding ]----#
+print STDERR "Verbose mode:   $v\n" if $v;
+print STDERR "String to find: $stg\n" if $v;
+print STDERR "Search pattern: $pattern\n" if $v;
+print STDERR "Files to check: @files\n" if $v;
+
+#----[ Process each file ]----#
+# my $nfound = 0;
+my @results = ();
+foreach my $file (@files) {
+
+    #----[ Skip non-files ]----#
+    if (! -f $file) {
+	print STDERR "Skipping non-file: $file\n" if $v > 1;
+	next;
+    }
+
+    #----[ Read every line until pattern is found ]----#
+    print STDERR "Checking file: $file\n" if $v > 1;
+    my $nr = 0;
+    my $found = 0;
+    open (my $fh, '<', $file) or next;
+    while (my $line = <$fh>) {
+	chomp($line);
+	$nr++;
+	if ($line =~ $pattern) {
+	    push @results, $file;
+	    $found = 1;
+	    # $nfound++;
+	    last;
+	}
+    }
+    close ($fh);
+    my $fstring = $found ? "found" : "not found";
+    print STDERR "  $stg $fstring in $file, lines checked: $nr\n" if $v > 1;
+}
+my $nfound = scalar(@results);
+print STDERR "$script: $nfound files contained: $stg\n" if $v;
+
+#----[ Print the list of files that matched ]----#
+# print join(' ', @results), "\n" if scalar(@results);
+print join(' ', @results), "\n" if $nfound;

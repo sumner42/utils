@@ -8,7 +8,7 @@ sub usage() { print STDERR
 # USAGE: path [-s][-v] [varname]
 #
 # OPTIONS:
-#   -s     Shorten the paths (Application/xxx/ becomes /App../)
+#   -s     Truncate long a-shell paths (Application/xxx/ becomes /App../)
 #   -v     Verbose mode. Print unmodified env variable first.
 # 
 # PARAMETERS:

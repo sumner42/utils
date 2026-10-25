@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 sub usage() { print STDERR
 '########################################################################
-# FILE: dt.py
+# FILE: dt.pl
 #
 # PURPOSE: Print a series of month/day: lines to start a UTI log month
 #
